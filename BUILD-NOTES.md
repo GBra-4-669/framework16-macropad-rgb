@@ -85,3 +85,38 @@ tag from `/etc/udev/rules.d/99-framework-qmk-via.rules`; only root could open it
 stayed shut. `udevadm trigger --action=add --subsystem-match=hidraw` re-applied the
 ACL. Worth knowing because a panel that silently cannot read the module looks like a
 panel with a bug in it.
+
+## The layer mapping, measured (2026-09-16)
+
+Measured over the diagnostic channel with the panel's keymap, after the keymap
+fix below. `layer_state` is a *bitmask*, so TO(n) shows up as `1 << n`, and the
+layer colour is set from the highest layer in force:
+
+| key | layer_state | active layer | colour (hue/sat) | palette |
+|---|---|---|---|---|
+| tc0 | 1 | 0 | 128 / 255 | on |
+| tc1 | 2 | 1 | 85 / 255 | off |
+| tc2 | 4 | 2 | 42 / 255 | off |
+| tc3 | 8 | 3 | 0 / 255 | off |
+
+## Framework's layer hooks collide with this module's layer numbers
+
+Framework's default macropad keymap - compiled into every build - carries
+`led_update_user` and `keyboard_post_init_user` hooks that name layers by
+number:
+
+```c
+if (led_state.num_lock) { layer_off(_FN); } else { layer_on(_FN); }
+```
+
+`_FN` is layer **1** there. On this module the keymap lives in EEPROM and its
+layer 1 is the user's **tc1**, so every numlock LED update reached in and
+cleared the layer the user had just selected: `TO(1)` set `layer_state = 2` and
+the hook immediately took it back to 0. tc1 therefore behaved exactly like tc0,
+and the panel - which identifies the layer by its colour - saw no change, so the
+palette stayed on for both.
+
+The fix is `keymaps/palette/keymap.c`: Framework's keymap with every layer hook
+removed (`led_update_user`, `keyboard_post_init_user`, `enable_factory_mode`).
+The EEPROM keymap supplies the real layout; the compiled one only has to not
+interfere with it. This is why the build uses `-km palette` and not `-km default`.
