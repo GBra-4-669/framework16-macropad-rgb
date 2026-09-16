@@ -51,6 +51,13 @@ a keypad key fires the same action a click on its panel cell does, because the
 keys are `KC_NO` on the module and `deck-state --watch-keys` reads them from the
 matrix report.
 
+**One decision worth knowing:** the key watcher fires on a tc0 press whenever
+the macropad is present, *including* when a real StreamDeck is attached. That is
+deliberate - pressing a keypad key to run the deck's action is useful either
+way - but if it should stay quiet while a deck is attached, it is one condition
+in `macropad_watch_keys` (`and not deck_present()`), and the keys would then do
+nothing at all in that configuration, since they are `KC_NO` on the module.
+
 **Not yet done, all small:** the panel's title could name the layer; the empty
 16th cell is invisible against the theme; deck-mode previews are rendered 1:1
 while the macropad's are 2×; tc2/tc3 have never been pinned by name; and the
