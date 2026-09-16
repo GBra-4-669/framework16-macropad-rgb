@@ -120,3 +120,18 @@ The fix is `keymaps/palette/keymap.c`: Framework's keymap with every layer hook
 removed (`led_update_user`, `keyboard_post_init_user`, `enable_factory_mode`).
 The EEPROM keymap supplies the real layout; the compiled one only has to not
 interfere with it. This is why the build uses `-km palette` and not `-km default`.
+
+## The keymap the keypad actually runs (remapped 2026-09-16)
+
+`keymap-after-remap.hex` is the EEPROM keymap as remapped over VIA: layer 0 keeps
+only `TO(0)`-`TO(3)` on the top row (matrix 2,1 / 2,2 / 3,4 / 2,4) and everything
+else is `KC_NO`; layers 1-3 are `KC_NO` with the top row transparent, so the
+layer keys work from anywhere. Nothing on the keypad types anything any more.
+
+That is deliberate: the keys' whole job is to be read from the matrix report by
+`deck-state --watch-keys`, which fires the deck action for the matching panel
+cell. A key that still sent a keycode would do both things at once.
+
+`keymap-their-original-layout.hex` in ~/f16-macropad is the layout before that,
+kept in case the numpad keys are ever wanted back. Flashing does not touch the
+EEPROM keymap; restoring either file over VIA's buffer commands is enough.
