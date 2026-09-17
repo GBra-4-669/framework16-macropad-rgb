@@ -58,11 +58,19 @@ way - but if it should stay quiet while a deck is attached, it is one condition
 in `macropad_watch_keys` (`and not deck_present()`), and the keys would then do
 nothing at all in that configuration, since they are `KC_NO` on the module.
 
+**Latency, as measured at the end of that session:** the panel appears 0.09s
+after a layer key (the macropad's key watcher opens it on the press, rather than
+waiting for the service's poll), and closes the same way. Before that work it was
+~1.4s, entirely the poll interval plus the cost of a full run.
+
+**Cost, as measured:** about 9-13% of one core - the watcher is 0.4%, the gate
+safety net 4.6%, the content refresh 8% (82ms of CPU per poll, down from 266ms
+once the image cache was named before compositing instead of after). The content
+refresh is the plugin's own `poll_interval` setting.
+
 **Not yet done, all small:** the panel's title could name the layer; the empty
 16th cell is invisible against the theme; deck-mode previews are rendered 1:1
-while the macropad's are 2×; tc2/tc3 have never been pinned by name; and the
-poll costs ~0.28 s at a one-second interval, which is what makes the panel take
-about a second to appear (a cheap gate-only poll would fix that).
+while the macropad's are 2×; and tc2/tc3 have never been pinned by name.
 
 **Where things live:** the logic is `~/.local/bin/deck-state` in the dotfiles
 repo; the panel and bar icon are the `noctalia-deck` plugin repo; the firmware is
