@@ -1,14 +1,11 @@
-// Keymap for the panel-palette firmware.
-//
-// Deliberately a copy of Framework's default keymap with every layer hook
-// removed: led_update_user, keyboard_post_init_user and enable_factory_mode.
-// Those name layers by number (_FN is 1, _NUMLOCK and _FACTORY are others) and
-// are written for Framework's own layout, but this module is driven from an
-// EEPROM keymap whose layer 1 is tc1 - so the hooks were switching the user's
-// layer off underneath them. TO(1) set layer 1 and the numlock hook cleared it
-// again immediately, which made tc1 behave exactly like tc0 and left the panel's
-// palette showing on both. The EEPROM keymap supplies the real layout; this file
-// only has to not interfere with it.
+// Keymap for the panel-palette firmware: Framework's default keymap with the layer
+// hooks removed (led_update_user, keyboard_post_init_user, enable_factory_mode).
+// Those hooks name layers by number (_FN is 1, _NUMLOCK and _FACTORY are others)
+// and are written for Framework's layout, but this module runs an EEPROM keymap
+// whose layer 1 is tc1, so the hooks were clearing the layer the keymap had just
+// selected: TO(1) set layer 1 and the numlock hook took it straight back to 0,
+// which made tc1 behave like tc0. The EEPROM keymap supplies the layout; this file
+// only has to leave it alone. See README.md, "The layer-hook collision".
 
 // Copyright 2022 Framework Computer
 // SPDX-License-Identifier: GPL-2.0-or-later

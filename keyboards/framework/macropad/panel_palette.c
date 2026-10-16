@@ -11,8 +11,8 @@
 // point of colouring the keypad the same way is that a human finds a key by
 // matching the cell on the screen to the colour under their finger. Over VIA
 // that is impossible: the keyboard-specific custom channel (0) is not
-// implemented on this firmware at all, and rgb_matrix's channel 3 has exactly
-// one colour, for the whole matrix. `qmk_hid`, Framework's own tool, has the
+// implemented on this firmware at all, and rgb_matrix channel 3 holds one colour
+// for the whole matrix. `qmk_hid`, Framework's own tool, has the
 // same ceiling: brightness, effect, effect speed, hue, saturation - no per-key.
 //
 // So the split is:
@@ -59,8 +59,8 @@ static const uint8_t panel_led[PANEL_ROWS][PANEL_COLS] = {
 //
 // The 15 hues behind these are evenly spread over the wheel, but *assigned* so
 // that neighbouring cells are far apart on it: a left-to-right rainbow puts
-// colours 24 degrees apart side by side, and telling those apart on a keypad at
-// a glance is exactly the thing that does not work. In this assignment the
+// colours 24 degrees apart side by side, and those are hard to tell apart on a
+// keypad at a glance. In this assignment the
 // closest neighbours are 96 degrees apart.
 //
 // Written out as RGB rather than computed from hues at boot because every init
@@ -83,9 +83,7 @@ static uint8_t panel_rgb[PANEL_ROWS][PANEL_COLS][3] = {
 #define PANEL_QUERY_LAYER 0xF0
 #define PANEL_QUERY_STATE 0xF1
 
-static uint8_t  panel_layer_changes = 0;   // times layer_state_set_kb has run
-static uint16_t panel_last_state   = 0;    // the last layer state it was given
-static uint16_t panel_last_default = 0;    // and the last default layer state
+static uint8_t panel_layer_changes = 0;   // times a layer hook has run
 
 static uint8_t panel_layer_of(layer_state_t state) {
     for (int8_t l = 31; l > 0; l--) {
@@ -98,7 +96,7 @@ static uint8_t panel_layer_of(layer_state_t state) {
 
 // Which layer is in force, asking both places QMK keeps one. A keymap can move
 // layer_state (TO/MO/TG and friends) or the default layer (DF), and a layer is
-// in force if either says so. Getting this wrong is not subtle: the palette
+// in force if either says so. Getting this wrong shows up immediately: the palette
 // showed on every layer because only layer_state was consulted, and this
 // keyboard's layer keys were not moving it.
 static uint8_t panel_active_layer(void) {
@@ -122,14 +120,12 @@ static void panel_apply_colour(uint8_t layer) {
 // whichever one the keymap uses.
 layer_state_t layer_state_set_kb(layer_state_t state) {
     panel_layer_changes++;
-    panel_last_state = (uint16_t)state;
     panel_apply_colour(panel_higher(panel_layer_of(state), panel_layer_of(default_layer_state)));
     return state;
 }
 
 layer_state_t default_layer_state_set_kb(layer_state_t state) {
     panel_layer_changes++;
-    panel_last_default = (uint16_t)state;
     panel_apply_colour(panel_higher(panel_layer_of(layer_state), panel_layer_of(state)));
     return state;
 }
@@ -137,7 +133,7 @@ layer_state_t default_layer_state_set_kb(layer_state_t state) {
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // Layer 0 is the panel's layer, and the only one this file has anything to
     // say about. Every other layer is left completely alone: the effect paints
-    // the matrix in the layer's colour exactly as it did before this file
+    // the matrix in the layer's colour as it did before this file
     // existed. Colouring those layers too was the first thing the panel's owner
     // noticed was wrong - the palette belongs to the panel, and the panel is not
     // up on those layers.
@@ -214,7 +210,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
             value_data[2] = panel_rgb[r][c][2];
             break;
         case id_custom_save:
-            // Deliberately nothing. The palette belongs to the host; persisting a
+            // Nothing to do: the palette belongs to the host. Persisting a
             // copy here would let the keypad and the panel disagree the moment
             // the host changed its mind while the keypad was unplugged.
             break;

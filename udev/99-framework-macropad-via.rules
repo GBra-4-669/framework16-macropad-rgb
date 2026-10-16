@@ -1,0 +1,11 @@
+# Framework Laptop 16 RGB Macropad: hidraw access for VIA and the deck tooling.
+#
+# The shipped firmware re-enumerates on flash and on replug, and on this machine
+# the uaccess ACL did not come back with it, leaving the node root:root 0600.
+# Granting the input group as well survives the re-enumeration.
+#
+# Install:
+#   sudo cp 99-framework-macropad-via.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="32ac", ATTRS{idProduct}=="0013", MODE="0660", GROUP="input", TAG+="uaccess"
