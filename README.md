@@ -9,10 +9,7 @@ matching it to the panel instead of counting from a corner.
 
 <img src="docs/images/macropad.jpg" width="360" alt="The macropad with a different colour on every key">
 
-The photo is the module running this firmware, with the palette the host pushed
-to it. The host program that chooses the colours is not part of this
-repository; what is here is the firmware, the flasher and the notes that got it
-working.
+The colours in the photo were pushed from the host.
 
 ## Why this needs firmware
 
@@ -114,9 +111,8 @@ expected image header and the sha256 to compare against.
 > on first boot.** Both are recoverable: Framework publishes the stock image and
 > an erase image, and the module enters an RP2040 bootloader that appears as a
 > USB drive. Back the keymap up first. `flash-macropad.py` does that automatically and writes it back after
-> the flash. The mount, the copy, the sync, the comparison, the unmount and the
-> udev retrigger use `sudo`; opening the module does not. Read the script before
-> you run it.
+> the flash. It uses `sudo` to mount the volume and copy the image; opening the
+> module does not. Read the script before you run it.
 
 Install the udev rule once, so the module's hidraw node is readable as your user:
 
@@ -176,7 +172,7 @@ The palette lives in RAM and belongs to the host. The firmware does not save it:
 a copy in EEPROM would let the keypad show colours the panel stopped using while
 the module was unplugged.
 
-Two read-only values on the same channel answer the question a colour cannot:
+The channel also reports layer state, which a colour cannot:
 
 | `value_id` | Answer |
 |---|---|
@@ -197,9 +193,7 @@ four layer keys in the keymap this was built for are called tc0 to tc3:
 
 ![The keypad switching between the palette and the effect across layers](docs/images/layers.gif)
 
-The clip steps through the layers. Layer 0 is the palette; on the others the
-configured effect paints the matrix. The full video is
-[macropad.mp4](docs/images/macropad.mp4).
+Full video: [macropad.mp4](docs/images/macropad.mp4).
 
 Only layer 0 is painted by this patch. On layers 1 to 3 the configured effect
 paints the matrix as it did before, because the palette belongs to the panel and
@@ -218,7 +212,7 @@ Numbers you can check here:
 | Image | 113,664 bytes, 222 UF2 blocks of 256 payload bytes |
 | Layer state | one HID read, so the panel does not have to poll the keypad |
 
-Two more numbers come from the host-side tool, which is not in this repository.
+The rest come from the host-side tool, which is not in this repository.
 The panel opens about 0.09 s after a layer key, and the process costs 9 to 13
 percent of one core across the key watcher, the gate and the refresh. Those were
 measured during the session and are written up in the
@@ -255,25 +249,19 @@ Most of these are not specific to this macropad.
    [session log](docs/session-2026-09-16.md#the-layer-hook-collision).
 
 5. The udev ACL can fail to survive re-enumeration. After a flash the node
-   came back `root:root 0600` with no ACL, and the panel stays shut. The rule adds
-   the `input` group and the flasher re-triggers udev; see
+   came back `root:root 0600` with no ACL, and the module is unreadable. The rule
+   adds the `input` group and the flasher re-triggers udev; see
    [FLASHING.md](docs/FLASHING.md#udev).
 
 6. VIA's raw HID has no request id. Two writers can read each other's
    replies, and a late answer to someone else's question looks like the answer to
-   yours. Serialise access with a lock and drain stale reports before every
+   yours. The host-side tool holds a lock and drains stale reports before every
    write.
 
 7. The LED order is not the visual order. The driver map in `macropad.c` was
    re-arranged so the LED ids follow the physical positions. The cell table came
    out of `g_led_config`, not from a drawing, and a drawing would have painted the
    neighbours instead.
-
-8. Python 3.12 removed `ast.Num`, and QMK 2025 still used it. The failure is
-   reported as `Platform not defined`, which is nowhere near the cause. Fix the
-   node type or use a Python 3.11 venv. Upstream has since moved that file to
-   `math_ops.py` and made the same change; the patch matters because the build
-   tree is Framework's pinned branch.
 
 ## What is not included
 

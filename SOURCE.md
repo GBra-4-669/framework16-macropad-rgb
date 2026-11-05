@@ -69,10 +69,10 @@ Fedora 43 in September 2026
 and the exact `arm-none-eabi-gcc` version was not recorded. A rebuild with a
 different toolchain will produce different bytes.
 
-The commits after the build changed comments, documentation, one unused static
-variable in `panel_palette.c` (commit `6104050`) and one shift in the same file
-from `1` to `1u`, which makes it well defined for shifts above the register width
-without changing the value it produces. None of those change what the firmware
+The edits after the build changed comments, documentation, one unused static
+variable in `panel_palette.c` and one shift in the same file from `1` to `1u`,
+which makes it well defined for shifts above the register width without changing
+the value it produces. None of those change what the firmware
 does, but they mean the tree in this repository and the tree that was compiled
 are not textually identical.
 

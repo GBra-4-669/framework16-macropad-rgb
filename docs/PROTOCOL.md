@@ -142,7 +142,7 @@ if you need the layer in that window.
 
 ## Diagnostics: 0xF0 and 0xF1
 
-Two read-only value ids on channel 0 answer with three bytes:
+Both diagnostics answer with three bytes:
 
 | `value_id` | byte 3 | byte 4 | byte 5 |
 |---|---|---|---|
@@ -171,9 +171,9 @@ Not part of the palette, but used by the flasher before and after every flash.
 | read | `12 <offset hi> <offset lo> <length>` | `12 <hi> <lo> <length> <data...>` |
 | write | `13 <offset hi> <offset lo> <length> <data...>` | echo |
 
-The keymap is 640 bytes: 10 layers, 4 matrix rows, 8 columns, 2 bytes per keycode,
-big-endian. It is read and written in chunks of 28 bytes, which is what fits in a
-32-byte report after the four header bytes.
+The keymap is 640 bytes, read and written in 28-byte chunks, which is what fits
+in a 32-byte report after the four header bytes. The layout is in
+[keymap-dumps/README.md](../keymap-dumps/README.md).
 
 ## A worked exchange
 

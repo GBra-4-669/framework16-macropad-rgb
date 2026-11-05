@@ -6,14 +6,13 @@
 > the EEPROM keymap on first boot, because QMK's stored-keymap validity comes
 > from the build date. Reflashing the same image does not. Back the keymap up
 > first; the script in this repo does that automatically and puts it back
-> afterwards. The mount, the copy,
-> the sync, the comparison, the unmount and the udev retrigger use `sudo`;
-> opening the module does not. Read the script before running it, and check the
-> volume yourself with `lsblk -o NAME,LABEL` if you want to see what it writes
-> to.
+> afterwards. The mount, the copy, the sync, the comparison, the unmount and the
+> udev retrigger use `sudo`; opening the module does not. Read the script before
+> running it, and check the volume yourself with `lsblk -o NAME,LABEL` if you
+> want to see what it writes to.
 
-This is a worked example from one module, not supported firmware and not a
-Framework release. If it breaks, the way back is below.
+This is a worked example from one module, not supported firmware. If it breaks,
+the way back is below.
 
 ## What the bootloader is
 
@@ -189,11 +188,11 @@ The dynamic keymap lives in the module's EEPROM, not in the image. After the
 first flash the module came back running the compiled `default` keymap: 72 of the
 320 keycodes had changed.
 
-The keymap is 640 bytes: 10 layers, 4 matrix rows, 8 columns, 2 bytes per keycode,
-big-endian. Dumping and restoring uses VIA's buffer commands, 28 bytes at a time,
-23 chunks, and the restore was verified by reading the whole thing back. The
-script does that automatically; by hand, `--dump` and `--restore` are the same
-code.
+The dynamic keymap is 640 bytes. Dumping and restoring uses VIA's buffer
+commands, 28 bytes at a time, 23 chunks, and the restore was verified by reading
+the whole thing back. The layout is in
+[keymap-dumps/README.md](../keymap-dumps/README.md). The script does that
+automatically; by hand, `--dump` and `--restore` are the same code.
 
 The cause is the build date. QMK keeps a magic in EEPROM derived from
 `QMK_BUILDDATE`, and when it does not match, `via_eeprom_is_valid()` fails and
@@ -223,8 +222,8 @@ adds the systemd `uaccess` tag:
 
 On the machine this was written on, the `uaccess` ACL did not come back after the
 module re-enumerated following a flash. The node was `root:root 0600` even though
-the udev database showed the tag, and only root could open it. The panel stays
-shut, which sends you looking in the wrong place.
+the udev database showed the tag, and only root could open it. Nothing opens the
+module, which sends you looking in the wrong place.
 
 The rule has a second grant for that case: `GROUP="input"`, which makes the node
 readable without the ACL. That group can read every input device, not only this

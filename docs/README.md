@@ -9,5 +9,5 @@ The README is the overview. These files are the long version.
 | [FLASHING.md](FLASHING.md) | Bootloader, the flasher, doing it by hand, recovery, the keymap problem |
 | [PROTOCOL.md](PROTOCOL.md) | The VIA custom channel: every byte, with examples |
 | [session-2026-09-16.md](session-2026-09-16.md) | The dated session log: what was tried, what failed, in the order it happened |
-| `images/` | The photo, the clip and the GIF used by the README |
+| `images/` | The image and video files the README embeds |
 
