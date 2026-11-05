@@ -63,9 +63,8 @@ Two independent ways back, both from Framework:
 * the stock firmware, published as `framework_macropad_default_v0.3.1.uf2` on the
   [v0.3.1 release](https://github.com/FrameworkComputer/qmk_firmware/releases/tag/v0.3.1)
   of their QMK fork, alongside the other input module variants;
-* `erase_flash.uf2` on the same release. It is the generic erase image for their
-  RP2040 boards, not a macropad-specific file. Read their instructions before
-  using it.
+* `erase_flash.uf2` on the same release. Read Framework's instructions before
+  using it; it is not a macropad-specific file.
 
 Neither is included in this repository. Download one before you need it, not
 after.
@@ -241,7 +240,7 @@ gives up on opening the module.
 | `macropad not found` | module not connected, or a different USB id | `lsusb` for `32ac:0013`; pass `--hidraw` if you know the node |
 | `no new RPI-RP2 volume appeared` | the jump did not take, or the only volumes present were already there | retry; watch `dmesg -w`, and unplug other boards the script listed |
 | `mount failed` | the desktop auto-mounted the volume, the mount point is busy, or sudo failed | check `mount`, unmount the volume, mount the node `lsblk` labels `RPI-RP2` yourself |
-| `cannot open the module` after a flash | udev ACL gone | install the rule, or `sudo udevadm trigger` |
+| `cannot open /dev/hidrawN` after a flash | udev ACL gone | install the rule, or `sudo udevadm trigger` |
 | module works, palette does not | host tool not running, or wrong layer | `--status`, check the layer colour |
 | keymap looks wrong after a flash | the restore did not run | `--restore` the backup from `keymap-backups/` |
 

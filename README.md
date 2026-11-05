@@ -7,9 +7,10 @@ It exists for one use. A deck panel on the screen paints a grid of actions, the
 macropad is painted the same way from the same table, and a key is found by
 matching it to the panel instead of counting from a corner.
 
-<img src="docs/images/macropad.jpg" width="360" alt="The macropad with a different colour on every key">
+<img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
 
-The colours in the photo were pushed from the host.
+The photo is the lit macropad. The clip below shows the per-key palette this
+firmware adds.
 
 ## Why this needs firmware
 
@@ -41,8 +42,7 @@ no reflash.
 The keyboard definition is not in upstream QMK. It lives in
 [FrameworkComputer/qmk_firmware](https://github.com/FrameworkComputer/qmk_firmware)
 on the `fl16-2025` branch, so building means cloning that fork rather
-than `qmk/qmk_firmware`. The module itself is hot swappable; the switches under
-the caps are not.
+than `qmk/qmk_firmware`. The module itself is hot swappable.
 
 ## What is in this repository
 
@@ -146,9 +146,10 @@ What it reports when it is done:
     default layer/changes/state: (0, 4, 1)
     cell 0: (255, 0, 0)
 
-`--status` prints the layer colour and both counters, which is how a palette
-that did not update gets traced. [docs/FLASHING.md](docs/FLASHING.md) has the
-manual procedure, the failure modes, and the way back to stock firmware.
+`--status` prints the layer colour and the change counter, which is how a
+palette that did not update gets traced. [docs/FLASHING.md](docs/FLASHING.md)
+has the manual procedure, the failure modes, and the way back to stock
+firmware.
 
 ## The palette protocol
 
@@ -177,7 +178,7 @@ The channel also reports layer state, which a colour cannot:
 | `value_id` | Answer |
 |---|---|
 | `F0` | active layer, layer changes since boot, `layer_state` low byte |
-| `F1` | the same three, for `default_layer_state` |
+| `F1` | the same layer and change count, then `default_layer_state` low byte |
 
 The layer a keymap selects is also reported as an HSV colour on VIA's own RGB
 matrix channel, channel 3, because that is a signal the shipped firmware already
