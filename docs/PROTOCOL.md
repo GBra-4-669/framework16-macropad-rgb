@@ -254,8 +254,9 @@ reply whose command is either the request's or `0xFF` and whose channel and valu
 id match, and gives up after a timeout. A reply that was already waiting is read
 as the answer to the new question, which is why the drain comes first. A firmware
 that does not implement the channel answers `0xFF`, and silence returns `None`.
-The flasher keeps those two apart in its status output; the condensed client
-above would turn both into zeros.
+The flasher keeps those two apart in its status output. The condensed client
+returns zeros for the `id_unhandled` reply and `None` for silence, so it loses
+the distinction unless it checks which one it got.
 
 The no-reply ambiguity is also pinned mechanically, in
 [`tests/test_flash_macropad.py`](../tests/test_flash_macropad.py), which runs

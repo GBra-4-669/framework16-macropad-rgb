@@ -22,6 +22,9 @@ matching it to the panel instead of counting from a corner.
 
 <img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
 
+The photo is the demo build the panel was developed against; the clip below shows
+the shipped 15-cell palette.
+
 ## Why this needs firmware
 
 VIA can talk to the shipped firmware, and what it can set on the RGB matrix
@@ -52,7 +55,7 @@ no reflash.
 The keyboard definition is not in upstream QMK. It lives in
 [FrameworkComputer/qmk_firmware](https://github.com/FrameworkComputer/qmk_firmware)
 on the `fl16-2025` branch, so building means cloning that fork rather
-than `qmk/qmk_firmware`. The module itself is hot swappable.
+than `qmk/qmk_firmware`. Framework lists the module as hot swappable.
 
 ## Build
 
@@ -89,8 +92,8 @@ expected image header and the sha256 to compare against.
 
 ## Flash
 
-> **A flash replaces the firmware, and a rebuild with a different date resets
-> the EEPROM keymap on first boot.** Both are recoverable: Framework publishes
+> **A flash replaces the firmware, and a build from a different day resets the
+> EEPROM keymap on first boot.** Both are recoverable: Framework publishes
 > the stock image and an erase image, and the module enters an RP2040 bootloader
 > that appears as a USB drive. Back the keymap up first. `flash-macropad.py` does that automatically and writes it back after
 > the flash. It uses `sudo` to mount the volume, copy the image, sync it,
@@ -236,13 +239,10 @@ Numbers you can check here:
 | Image | 113,664 bytes, 222 UF2 blocks of 256 payload bytes |
 | Layer state | one HID read, so the panel does not have to poll the keypad |
 
-Two timings come from the host-side tool, which is not in this repository, so
-they cannot be checked here. The panel opens about 0.09 s after a layer key, and
-the process costs 9 to 13 percent of one core across the key watcher, the gate
-and the refresh. Those were
-measured during the session and are written up in the
-[session log](docs/session-2026-09-16.md#what-it-costs-on-the-host). There is no
-harness for them here, so they are notes rather than a benchmark.
+The host-side timings from the session, including the panel latency and CPU
+cost, describe software that is not in this repository; they are in the
+[session log](docs/session-2026-09-16.md#what-it-costs-on-the-host) and are out
+of scope here.
 
 ## Lessons and traps
 
@@ -276,9 +276,9 @@ Most of these are not specific to this macropad.
 
 5. The udev ACL can fail to survive re-enumeration. After a flash the node
    came back `root:root 0600` with no ACL, and the module is unreadable. The
-   shipped rule relies on `uaccess` and the flasher re-triggers udev;
-   [FLASHING.md](docs/FLASHING.md#udev) shows the optional `GROUP="input"`
-   fallback and what it costs.
+   shipped rule grants the `input` group as well as `uaccess`, which is what
+   worked on this machine; the group can read every input device, so
+   [FLASHING.md](docs/FLASHING.md#udev) explains the trade and how to drop it.
 
 6. VIA's raw HID has no request id. Two writers can read each other's
    replies, and a late answer to someone else's question looks like the answer to
@@ -307,20 +307,14 @@ Most of these are not specific to this macropad.
 
 ## Limits of the shipped image
 
-Known issues in this image, planned for v0.2:
+Two things in the layer-colour signal are still rough:
 
-* A layer change sets the layer colour at full value, so it also puts matrix
-  brightness back to maximum and overrides a brightness set in VIA.
-* The `_kb` hooks do not chain to the `_user` versions, so a keymap that defines
-  `layer_state_set_user` or `rgb_matrix_indicators_advanced_user` will not have
-  them called.
-* The compiled keymap has no layer key; it is what a hand flash from a build
-  with another date leaves behind, and it can only reach layer 0. The flasher
-  restores the EEPROM keymap, which has the layer keys.
 * At boot, channel 3 reports the colour loaded from EEPROM until the first layer
   change. Read `0xF0` if you need the layer before then.
 * The layer colour has four hues, so layers 4 to 9 reuse them. Use `0xF0` past
   layer 3.
+
+The palette itself is RAM only, by design: see the protocol section.
 
 ## Credits
 

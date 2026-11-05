@@ -209,13 +209,16 @@ def test_get_turns_an_unhandled_reply_into_the_sentinel():
         thread.join(timeout=1)
 
 
-def test_udev_rule_grants_only_the_seat():
+def test_udev_rule_is_narrow_and_grants_the_documented_group():
     rule = open(os.path.join(REPO, "udev", "99-framework-macropad-via.rules")).read()
-    assert 'TAG+="uaccess"' in rule
-    assert 'ATTRS{idVendor}=="32ac"' in rule
-    assert 'ATTRS{idProduct}=="0013"' in rule
     active = "\n".join(line for line in rule.splitlines() if not line.strip().startswith("#"))
-    assert 'GROUP="input"' not in active, "the input group can read every input device"
+    assert 'SUBSYSTEM=="hidraw"' in active
+    assert 'ATTRS{idVendor}=="32ac"' in active
+    assert 'ATTRS{idProduct}=="0013"' in active
+    assert 'TAG+="uaccess"' in active
+    # The group grant is deliberate: uaccess alone did not survive re-enumeration
+    # on the machine this was written on. docs/FLASHING.md explains the trade.
+    assert 'GROUP="input"' in active
 
 
 def test_readme_images_exist():

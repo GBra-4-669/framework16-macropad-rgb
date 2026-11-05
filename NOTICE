@@ -20,7 +20,8 @@ any later version. The full text of version 2 is in LICENSE.
 
 Framework Computer's work
 -------------------------
-keyboards/framework/macropad/ is Framework's keyboard definition, taken from
+The keyboard definition files under keyboards/framework/macropad/, other than
+the files listed above, are Framework's, taken from
 https://github.com/FrameworkComputer/qmk_firmware, branch fl16-2025.
 Copyright (C) 2022 Framework Computer.
 Licensed GPL-2.0-or-later.
@@ -67,5 +68,5 @@ Framework, Framework Laptop 16 and RGB Macropad are trademarks of Framework
 Computer Inc. This repository is not affiliated with Framework, and nothing here
 is a Framework release or supported by them.
 
-I am Giulio Bramanti. Older commit messages and the keyboard firmware use the
-handle GBra 4.669, and earlier drafts of panel_palette.c used gbra.
+I am Giulio Bramanti. Older commit messages use the handle GBra 4.669, and
+earlier drafts of panel_palette.c used gbra.

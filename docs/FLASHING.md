@@ -209,36 +209,33 @@ the date, so reflashing it, or rebuilding it with the command in
 leaves the stored keymap alone, because the emulated EEPROM sits above the image
 in the same flash. That is why the script dumps before and restores after.
 
-There is a consequence if you flash by hand and do not restore a keymap across
-a build with a different date. The compiled keymap in this patch is Framework's
-layout with its layer hooks removed, and the layer keys live in the EEPROM keymap,
-so after such a flash the module is a numpad on layer 0 with no route to layers 1
-and 2, where the RGB and backlight controls are. The flasher puts your keymap back; a
+There is a consequence if you flash by hand across a build from another day and
+do not restore a keymap. The compiled keymap in this patch is Framework's layout
+with its layer hooks removed, plus `LT(_FN, KC_NUM)` on the Num key, so holding
+Num still reaches the RGB and backlight controls; the four layer keys the panel
+uses live in the EEPROM keymap. The flasher puts your keymap back; a
 hand flash does not, so do the `--restore` at the end.
 
 ## udev
 
 The module exposes its raw HID interface as a hidraw node, and by default that
-node is `root:root 0600`. The rule in `udev/` gives it to the logged-in seat with
-the systemd `uaccess` tag:
+node is `root:root 0600`. The rule in `udev/` gives it to the `input` group and
+adds the systemd `uaccess` tag:
 
     sudo cp udev/99-framework-macropad-via.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules
     sudo udevadm trigger
+    sudo usermod -aG input $USER     # then log in again
 
-On the machine this was written on, the `uaccess` ACL did not come back after the
-module re-enumerated following a flash. The node was `root:root 0600` even though
-the udev database showed the tag, and only root could open it. Nothing opens the
-module, which sends you looking in the wrong place.
-
-The shipped rule grants only `uaccess`. If the ACL does not come back on your
-machine, first re-trigger udev with
-`sudo udevadm trigger --action=add --subsystem-match=hidraw` and replug. If that
-does not hold, add `GROUP="input"` to the rule and join the group with
-`sudo usermod -aG input $USER`, then log in again. That group can read every
-input device, not only this module, so it is a trade; the rule does not make it
-for you. The script tries the re-trigger and waits before it gives up on opening
-the module.
+The group is not decoration. On the machine this was written on, the `uaccess`
+ACL did not come back after the module re-enumerated following a flash; the node
+was `root:root 0600` even though the udev database showed the tag, and only root
+could open it. With `MODE="0660", GROUP="input"` it comes back `root:input` and
+the group can open it. The cost is that the `input` group can read every input
+device on the machine, not only this module. If your machine keeps the ACL, drop
+the `GROUP="input"` part and rely on `uaccess`; the rule still matches only this
+vendor and product. The flasher also re-triggers udev and waits before it gives
+up on opening the module.
 
 ## When it does not work
 

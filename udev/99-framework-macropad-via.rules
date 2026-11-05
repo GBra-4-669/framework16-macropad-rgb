@@ -1,13 +1,15 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Framework Laptop 16 RGB Macropad: hidraw access for VIA and the deck tooling.
 #
-# The rule grants the logged-in seat through uaccess and nothing wider. On the
-# machine this was written on the ACL sometimes failed to come back after a
-# re-enumeration, leaving the node root:root 0600; docs/FLASHING.md says how to
-# add GROUP="input" yourself if you hit that, and what it costs.
+# The udev uaccess ACL did not survive re-enumeration on the machine this was
+# written on, so the rule also grants the input group, which is what made the
+# node readable there. That group can read every input device, not only this
+# module; docs/FLASHING.md says what the trade costs and how to drop the group
+# if your machine keeps the ACL.
 #
 # Install:
 #   sudo cp 99-framework-macropad-via.rules /etc/udev/rules.d/
 #   sudo udevadm control --reload-rules && sudo udevadm trigger
+#   sudo usermod -aG input $USER     (then log in again)
 
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="32ac", ATTRS{idProduct}=="0013", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="32ac", ATTRS{idProduct}=="0013", MODE="0660", GROUP="input", TAG+="uaccess"
