@@ -7,10 +7,12 @@ It exists for one use. A deck panel on the screen paints a grid of actions, the
 macropad is painted the same way from the same table, and a key is found by
 matching it to the panel instead of counting from a corner.
 
-![The deck panel and the macropad showing the same palette](docs/images/palette.gif)
+<img src="docs/images/macropad.jpg" width="360" alt="The macropad with a different colour on every key">
 
-Both are painted from one palette on the host, so a colour on the screen is the
-colour under a finger. The clip is a few seconds of pressing keys.
+The photo is the module running this firmware, with the palette the host pushed
+to it. The host program that chooses the colours is not part of this
+repository; what is here is the firmware, the flasher and the notes that got it
+working.
 
 ## Why this needs firmware
 
@@ -170,8 +172,6 @@ because the sixteenth position on that grid is a key the panel does not use.
 Writing to cell 15 is accepted and nothing is drawn. The full table, with the
 LED index for each cell, is in [docs/PROTOCOL.md](docs/PROTOCOL.md#which-cell-is-which-key).
 
-![The panel whose cells the palette mirrors](docs/images/panel.png)
-
 The palette lives in RAM and belongs to the host. The firmware does not save it:
 a copy in EEPROM would let the keypad show colours the panel stopped using while
 the module was unplugged.
@@ -195,7 +195,11 @@ four layer keys in the keymap this was built for are called tc0 to tc3:
 | 2 | tc2 | 42 | 255 |
 | 3 | tc3 | 0 | 255 |
 
-![The four layer colours, one photo per layer](docs/images/layer-ramp.jpg)
+![The keypad switching between the palette and the effect across layers](docs/images/layers.gif)
+
+The clip steps through the layers. Layer 0 is the palette; on the others the
+configured effect paints the matrix. The full video is
+[macropad.mp4](docs/images/macropad.mp4).
 
 Only layer 0 is painted by this patch. On layers 1 to 3 the configured effect
 paints the matrix as it did before, because the palette belongs to the panel and
