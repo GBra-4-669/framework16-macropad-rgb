@@ -1,29 +1,28 @@
-// Copyright 2026 gbra
+// Copyright 2026 Giulio Bramanti
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
 // Per-key colours for the Laptop 16 RGB Macropad, for the on-screen deck panel.
 //
-// This file is not Framework's. It is added to their macropad keyboard so the
-// hardware can do something the shipped firmware cannot: colour each key
-// individually.
+// Added to Framework's macropad keyboard to colour keys individually, which the
+// shipped firmware cannot do.
 //
-// Why it has to be firmware. The panel draws the deck's keys on screen, and the
-// point of colouring the keypad the same way is that a human finds a key by
-// matching the cell on the screen to the colour under their finger. Over VIA
-// that is impossible: the keyboard-specific custom channel (0) is not
-// implemented on this firmware at all, and rgb_matrix channel 3 holds one colour
-// for the whole matrix. `qmk_hid`, Framework's own tool, has the
-// same ceiling: brightness, effect, effect speed, hue, saturation - no per-key.
+// Why it has to be firmware. The panel draws the deck's keys on screen, and
+// colouring the keypad the same way lets a person find a key by matching the
+// cell on the screen to the colour under their finger. Over VIA that is
+// impossible: the keyboard-specific custom channel (0) is not implemented on
+// this firmware at all, and rgb_matrix channel 3 holds one colour for the whole
+// matrix. `qmk_hid`, Framework's own tool, has the same ceiling: brightness,
+// effect, effect speed, hue, saturation, no per-key.
 //
 // So the split is:
 //
 //   * the 15 keys the panel maps get their own colour, and the host sets them
-//     over VIA's custom channel (0) - so changing the palette is software, and
+//     over VIA's custom channel (0), so changing the palette is software and
 //     never needs another flash;
-//   * every other key - the top row of layer keys, and the keys the panel does
-//     not map - shows the active layer's colour at low brightness. Dim reads as
-//     "not a panel key" whatever the hue, while the hue still says which layer
-//     you are on, which is also what the panel reads to know.
+//   * every other key, the top row of layer keys and the keys the panel does not
+//     map, shows the active layer's colour at low brightness. Dim reads as "not
+//     a panel key" whatever the hue, while the hue still says which layer you
+//     are on, which is also what the panel reads to know.
 
 #include QMK_KEYBOARD_H
 
@@ -53,15 +52,13 @@ static const uint8_t panel_led[PANEL_ROWS][PANEL_COLS] = {
     {9, 11, 15, PANEL_NONE},
 };
 
-// Default colours, replaced wholesale when the host pushes its palette - which
-// it does at startup, so these are only what the keypad shows until then (at the
-// login screen, say) and never what the panel is matching against.
+// Default colours, replaced wholesale when the host pushes its palette. The host
+// does that at startup, so these are only what the keypad shows until then (at
+// the login screen, say), and never what the panel matches against.
 //
-// The 15 hues behind these are evenly spread over the wheel, but *assigned* so
-// that neighbouring cells are far apart on it: a left-to-right rainbow puts
-// colours 24 degrees apart side by side, and those are hard to tell apart on a
-// keypad at a glance. In this assignment the
-// closest neighbours are 96 degrees apart.
+// The 15 painted cells get hues spaced evenly over the 256-step wheel, then
+// shuffled so keys that share an edge are at least 35 hue units apart. Cell 15,
+// which the panel never uses, repeats cell 0's red.
 //
 // Written out as RGB rather than computed from hues at boot because every init
 // hook this keyboard has is already taken: Framework's shared framework.c
@@ -76,10 +73,10 @@ static uint8_t panel_rgb[PANEL_ROWS][PANEL_COLS][3] = {
 // Read-only diagnostics on the same channel, so the host can ask the module what
 // it thinks instead of inferring it from a colour: value_id PANEL_QUERY_LAYER
 // answers {layer it is on now, layers it has been on since boot, layer state
-// low byte}. The colour is only an *indirect* signal - it is set from the same
-// layer state - and when a layer change did not show up in the colour there was
-// no way to tell whether the keypad had not changed layer or this file had not
-// noticed. This makes that answerable.
+// low byte}. The colour is only an *indirect* signal, because it is set from the
+// same layer state, and when a layer change did not show up in the colour there
+// was no way to tell whether the keypad had not changed layer or this file had
+// not noticed. This makes that answerable.
 #define PANEL_QUERY_LAYER 0xF0
 #define PANEL_QUERY_STATE 0xF1
 
@@ -87,7 +84,7 @@ static uint8_t panel_layer_changes = 0;   // times a layer hook has run
 
 static uint8_t panel_layer_of(layer_state_t state) {
     for (int8_t l = 31; l > 0; l--) {
-        if (state & ((layer_state_t)1 << l)) {
+        if (state & ((layer_state_t)1u << l)) {
             return (uint8_t)l;
         }
     }
@@ -114,7 +111,7 @@ static void panel_apply_colour(uint8_t layer) {
 }
 
 // This colour is what the module reports over VIA, and the panel reads it to
-// know which layer is active - so it is set on every layer change, rather than
+// know which layer is active, so it is set on every layer change rather than
 // left to whatever happened to be in the EEPROM. Both hooks are implemented
 // because either mechanism can move the layer, and the colour has to follow
 // whichever one the keymap uses.
@@ -135,7 +132,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // say about. Every other layer is left completely alone: the effect paints
     // the matrix in the layer's colour as it did before this file
     // existed. Colouring those layers too was the first thing the panel's owner
-    // noticed was wrong - the palette belongs to the panel, and the panel is not
+    // noticed was wrong: the palette belongs to the panel, and the panel is not
     // up on those layers.
     if (panel_active_layer() != 0) {
         return false;
@@ -163,9 +160,9 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
 }
 
 // VIA custom channel 0, which this firmware did not implement before: value_id is
-// the panel cell (row * PANEL_COLS + col) and the data is its colour. `deck-state`
-// is the only writer, and it is also what the on-screen cell is painted from, so
-// the two cannot drift apart.
+// the panel cell (row * PANEL_COLS + col) and the data is its colour. The panel is
+// the only writer, and it paints its own cells from the same table it pushes here,
+// so the two cannot drift apart.
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     uint8_t *command_id = &(data[0]);
     uint8_t *channel_id = &(data[1]);
