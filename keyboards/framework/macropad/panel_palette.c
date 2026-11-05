@@ -83,7 +83,7 @@ static uint8_t panel_rgb[PANEL_ROWS][PANEL_COLS][3] = {
 static uint8_t panel_layer_changes = 0;   // times a layer hook has run
 
 static uint8_t panel_layer_of(layer_state_t state) {
-    for (int8_t l = 31; l > 0; l--) {
+    for (int8_t l = 15; l > 0; l--) {
         if (state & ((layer_state_t)1u << l)) {
             return (uint8_t)l;
         }
