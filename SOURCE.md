@@ -74,8 +74,8 @@ reproducibility section below uses the second.
 ## The build
 
 Built from the files in this repository, with the tree and patches above, on
-Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and the QMK CLI 1.2.0. The date is
-pinned, so the output does not depend on when the build runs:
+Fedora 44 with `arm-none-eabi-gcc` 15.2.0, the QMK CLI 1.2.0 and Python 3.14.7.
+The date is pinned, so the output does not depend on when the build runs:
 
     export TZ=UTC
     export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
@@ -91,7 +91,7 @@ of this recipe gave that same file.
 
 The image is bit-for-bit reproducible with the recipe above: two clean builds on
 Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and QMK CLI 1.2.0 produced the shipped
-sha256, `cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8`. The
+sha256, `2be0da7781750e0062dbb585dcfd7aa50cae40c28cab54201eb7e86479f05cc2`. The
 build used `QMK_BUILDDATE` `2026-11-05-12:00:00`, and the EEPROM magic derives
 from the date digits in it; without the second patch above the date would be the
 wall-clock time and nothing would match.
@@ -101,9 +101,8 @@ image, or rebuilding it with this command, leaves the stored keymap alone. A
 build with another compiler or QMK CLI can produce different bytes; a build on
 another date also changes the magic and resets the keymap once.
 
-On master the image was rebuilt from the files here, so there are no source
-changes after the build. The `v0.2-dev` branch carries three later firmware
-fixes and builds a different image.
+The image was built from the files here, so there are no source changes after
+the build.
 
 ## Written offer
 

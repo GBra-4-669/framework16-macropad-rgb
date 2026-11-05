@@ -109,7 +109,7 @@ The image in this repo is 113,664 bytes, and each 512-byte UF2 block carries a
     $ stat -c %s framework_macropad_palette.uf2
     113664
     $ sha256sum framework_macropad_palette.uf2
-    cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8  ...
+    2be0da7781750e0062dbb585dcfd7aa50cae40c28cab54201eb7e86479f05cc2  ...
 
 That sha256 is the shipped image, and the build above reproduces it
 byte-for-byte on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and the QMK CLI 1.2.0:
@@ -118,11 +118,18 @@ produce different bytes, so compare a rebuild against it only when the toolchain
 matches. [SOURCE.md](../SOURCE.md) records the commit, the submodules and the
 tree patches.
 
-This image was rebuilt from the source in this repository and then checked on the
-module itself, not only against a checksum: all sixteen cells answer with the
-palette table in `panel_palette.c`, cell 16 answers `0xff`, the layer colour
-reads `(128, 255)` after boot, `0xF0` reports the layer and its change counter,
-and the 640-byte keymap reads back unchanged after the flash that wrote it.
+The palette code is the same one that was checked on the module: all sixteen
+cells answer with the palette table in `panel_palette.c`, cell 16 answers
+`0xff`, the layer colour reads `(128, 255)` after boot, `0xF0` reports the layer
+and its change counter, and the 640-byte keymap reads back unchanged after the
+flash that wrote it.
+
+This image also carries three fixes, each measured on the module: RGB brightness
+stayed at 39 across a reboot and three boot-time layer changes (it used to jump
+to 255); a probe keymap's `layer_state_set_user` was called and reported layer 3
+(it used to be ignored); and after a forced keymap reset the compiled keymap
+contains `LT(_FN, KC_NUM)` (0x4153) at matrix position (0,0), so holding Num
+reaches the RGB layer.
 
 If you want to look at the header yourself, the first 32 bytes are little-endian
 `magic0, magic1, flags, target address, payload size, block number, block count,
@@ -162,13 +169,15 @@ and build with the date fixed:
     export TZ=UTC
     export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
 
-The shipped image was built with this pin; its `QMK_BUILDDATE` is
-`2026-11-05-12:00:00`. Two clean builds on Fedora 44 with `arm-none-eabi-gcc`
-15.2.0 reproduced it byte-for-byte, including
-`cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8`, so the
+The shipped image was built with the date pinned to `2026-11-05-12:00:00` in
+the generated `version.h`; the image itself carries the EEPROM magic derived from
+the date digits, not the string. Two clean builds on Fedora 44 with
+`arm-none-eabi-gcc` 15.2.0 reproduced it byte-for-byte, including
+`2be0da7781750e0062dbb585dcfd7aa50cae40c28cab54201eb7e86479f05cc2`, so the
 checksum is a rebuild target when the toolchain matches. Pinning also keeps the
 EEPROM magic stable, which is what makes "reflashing this image keeps your
-keymap" true for rebuilds as well.
+keymap" true for rebuilds as well: a build on another day changes the magic and
+resets the keymap once.
 
 ## The Python 3.12 trap
 

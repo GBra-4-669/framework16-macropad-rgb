@@ -107,7 +107,7 @@ static uint8_t panel_active_layer(void) {
 static uint8_t panel_higher(uint8_t a, uint8_t b) { return a > b ? a : b; }
 
 static void panel_apply_colour(uint8_t layer) {
-    rgb_matrix_sethsv_noeeprom(layer_hue[layer % PANEL_LAYERS], LAYER_SAT, 255);
+    rgb_matrix_sethsv_noeeprom(layer_hue[layer % PANEL_LAYERS], LAYER_SAT, rgb_matrix_get_val());
 }
 
 // This colour is what the module reports over VIA, and the panel reads it to
@@ -116,18 +116,22 @@ static void panel_apply_colour(uint8_t layer) {
 // because either mechanism can move the layer, and the colour has to follow
 // whichever one the keymap uses.
 layer_state_t layer_state_set_kb(layer_state_t state) {
+    state = layer_state_set_user(state);
     panel_layer_changes++;
     panel_apply_colour(panel_higher(panel_layer_of(state), panel_layer_of(default_layer_state)));
     return state;
 }
 
 layer_state_t default_layer_state_set_kb(layer_state_t state) {
+    state = default_layer_state_set_user(state);
     panel_layer_changes++;
     panel_apply_colour(panel_higher(panel_layer_of(layer_state), panel_layer_of(state)));
     return state;
 }
 
 bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
+    bool handled = rgb_matrix_indicators_advanced_user(led_min, led_max);
+
     // Layer 0 is the panel's layer, and the only one this file has anything to
     // say about. Every other layer is left completely alone: the effect paints
     // the matrix in the layer's colour as it did before this file
@@ -135,7 +139,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
     // noticed was wrong: the palette belongs to the panel, and the panel is not
     // up on those layers.
     if (panel_active_layer() != 0) {
-        return false;
+        return handled;
     }
 
     RGB dim = hsv_to_rgb((HSV){.h = layer_hue[0], .s = LAYER_SAT, .v = (uint8_t)(255 * PANEL_DIM / 100)});
@@ -156,7 +160,7 @@ bool rgb_matrix_indicators_advanced_kb(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(led, panel_rgb[r][c][0], panel_rgb[r][c][1], panel_rgb[r][c][2]);
         }
     }
-    return false;
+    return handled;
 }
 
 // VIA custom channel 0, which this firmware did not implement before: value_id is
