@@ -99,13 +99,20 @@ The image in this repo is 113,664 bytes, and each 512-byte UF2 block carries a
     $ stat -c %s framework_macropad_palette.uf2
     113664
     $ sha256sum framework_macropad_palette.uf2
-    4d55963700a83f6cb3d024930c6d615975d0b4cc7da74f893d79c2fa81ed1349  ...
+    cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8  ...
 
-That sha256 is what this machine produced with the toolchain above. A different
+That sha256 is what this machine produced with the toolchain above, for the
+source in this repository. A different
 GCC or QMK version will produce different bytes, so use it to
 check a rebuild against this repo, not as a proof that your build is correct.
 [SOURCE.md](../SOURCE.md) records the exact commit, the submodules and the one
 patch, and says plainly that the image is not bit-reproducible.
+
+This image was rebuilt from the source in this repository and then checked on the
+module itself, not only against a checksum: all sixteen cells answer with the
+palette table in `panel_palette.c`, cell 16 answers `0xff`, the layer colour
+reads `(128, 255)` after boot, `0xF0` reports the layer and its change counter,
+and the 640-byte keymap reads back unchanged after the flash that wrote it.
 
 If you want to look at the header yourself, the first 32 bytes are little-endian
 `magic0, magic1, flags, target address, payload size, block number, block count,
