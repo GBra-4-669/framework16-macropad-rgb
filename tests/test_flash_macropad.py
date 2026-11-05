@@ -217,7 +217,7 @@ def test_udev_rule_is_narrow_and_grants_the_documented_group():
     assert 'ATTRS{idProduct}=="0013"' in active
     assert 'TAG+="uaccess"' in active
     # The group grant is deliberate: uaccess alone did not survive re-enumeration
-    # on the machine this was written on. docs/FLASHING.md explains the trade.
+    # here. docs/FLASHING.md explains the trade.
     assert 'GROUP="input"' in active
 
 

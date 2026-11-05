@@ -22,8 +22,8 @@ matching it to the panel instead of counting from a corner.
 
 <img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
 
-The photo is the demo build the panel was developed against; the clip below shows
-the shipped 15-cell palette.
+The photo is the demo build the panel was developed against, not the shipped
+palette; the GIF further down is.
 
 ## Why this needs firmware
 
@@ -82,13 +82,10 @@ From a shell with `arm-none-eabi-gcc` installed:
 
 The result is `framework_macropad_palette.uf2` in the root of the tree.
 
-One trap before you start: on Python 3.12 and later the QMK
-CLI dies while reading `info.json` with `AttributeError: module 'ast' has no
-attribute 'Num'`, and the makefile reports it as `Platform not defined`, which
-points nowhere near the cause. The fix is one `ast.Num` check in
-`lib/python/qmk/math.py`, or a Python 3.11 venv.
-[docs/BUILD.md](docs/BUILD.md) has the patch, the toolchain packages, the
-expected image header and the sha256 to compare against.
+One trap before you start: on Python 3.12 the QMK CLI fails on `info.json` and
+the makefile blames `Platform not defined`.
+[docs/BUILD.md](docs/BUILD.md#the-python-312-trap) has the fix, the toolchain
+packages, the image header and the sha256 to compare against.
 
 ## Flash
 
@@ -121,9 +118,7 @@ that appeared after the jump, so a second board sitting in its bootloader does
 not get this image written to it. It also compares sha256 of the copy against the
 source after writing it; that catches a copy that went wrong, but it runs after
 the module has rebooted, so the check that matters is the one before. Every path
-is an argument or next to the script. The `.sha256` file catches a bad download
-or a bad copy; anyone replacing the image can replace the checksum too, so it is
-not a signature.
+is an argument or next to the script.
 
 What it reports when it is done:
 
@@ -141,8 +136,8 @@ firmware.
 
 ## What is in this repository
 
-This is a patch, not a buildable tree. Nothing here compiles on its own: the
-three files under `keyboards/` are copied into Framework's fork and built there.
+Nothing here compiles on its own: the three files under `keyboards/` are copied
+into Framework's fork and built there.
 If you just want to try it, the built image is included and there is nothing to
 compile.
 
@@ -191,13 +186,12 @@ sixteenth position on that grid is a key the panel does not use. Writing to cell
 for each cell, is in
 [docs/PROTOCOL.md](docs/PROTOCOL.md#which-cell-is-which-key).
 
-The nine keys outside the panel are the four layer keys in the top row, the four
-keys in the bottom row and the key at row 4 column 3. They show the active
-layer's colour at 30 percent brightness.
+The other nine keys, listed in
+[PROTOCOL.md](docs/PROTOCOL.md#which-cell-is-which-key), show the active layer's
+colour at 30 percent.
 
-The palette lives in RAM and belongs to the host. The firmware does not save it:
-a copy in EEPROM would let the keypad show colours the panel stopped using while
-the module was unplugged.
+The palette lives in RAM and belongs to the host, which pushes it; nothing in
+the firmware stores it.
 
 The channel also reports layer state, which a colour cannot:
 
@@ -223,13 +217,10 @@ four layer keys in the keymap this was built for are called tc0 to tc3:
 Full video: [macropad.mp4](docs/images/macropad.mp4).
 
 Only layer 0 is painted by this patch. On layers 1 to 3 the configured effect
-paints the matrix as it did before, because the palette belongs to the panel and
-the panel is not up on those layers. The layer colour write does set brightness
-back to full; see the limits below.
+paints the matrix as it did before. The layer colour write keeps the current RGB
+brightness.
 
 ## Measurements
-
-Numbers you can check here:
 
 | What | Value |
 |---|---|
@@ -239,14 +230,10 @@ Numbers you can check here:
 | Image | 113,664 bytes, 222 UF2 blocks of 256 payload bytes |
 | Layer state | one HID read, so the panel does not have to poll the keypad |
 
-The host-side timings from the session, including the panel latency and CPU
-cost, describe software that is not in this repository; they are in the
-[session log](docs/session-2026-09-16.md#what-it-costs-on-the-host) and are out
-of scope here.
+Host-side timings are in the
+[session log](docs/session-2026-09-16.md#what-it-costs-on-the-host).
 
 ## Lessons and traps
-
-Most of these are not specific to this macropad.
 
 1. Framework intercepts VIA's bootloader command. Command `0x0B` does not
    reach QMK: `keyboards/framework/factory.c` takes it over and reads the next
@@ -307,14 +294,11 @@ Most of these are not specific to this macropad.
 
 ## Limits of the shipped image
 
-Two things in the layer-colour signal are still rough:
-
 * At boot, channel 3 reports the colour loaded from EEPROM until the first layer
   change. Read `0xF0` if you need the layer before then.
 * The layer colour has four hues, so layers 4 to 9 reuse them. Use `0xF0` past
   layer 3.
 
-The palette itself is RAM only, by design: see the protocol section.
 
 ## Credits
 

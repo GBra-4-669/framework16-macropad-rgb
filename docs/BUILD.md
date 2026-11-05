@@ -9,7 +9,7 @@ byte-for-byte.
 
 ## What the build makes
 
-One UF2 image for the macropad. The module is an RP2040 with 264 KiB of SRAM and
+The build produces one UF2 image for the macropad. The module is an RP2040 with 264 KiB of SRAM and
 1 MiB of QSPI flash for the firmware, plus an IS31FL3743A LED driver behind the
 24 keys. QMK's RP2040 target produces a UF2 image, which is the format the RP2040
 bootloader accepts over USB mass storage.
@@ -56,8 +56,8 @@ Use the venv's `qmk` afterwards. `arm-none-eabi-gcc` still has to be on `PATH`.
 
 ## Copying the files in
 
-Three things go into `keyboards/framework/macropad/` in the tree. The directory
-already exists there, so copy into it; do not copy the whole `keyboards/`
+The files that go into `keyboards/framework/macropad/` in the tree are listed
+below. The directory already exists there, so copy into it; do not copy the whole `keyboards/`
 directory from this repo over the tree, which would replace files this patch
 does not touch.
 
@@ -171,13 +171,9 @@ and build with the date fixed:
 
 The shipped image was built with the date pinned to `2026-11-05-12:00:00` in
 the generated `version.h`; the image itself carries the EEPROM magic derived from
-the date digits, not the string. Two clean builds on Fedora 44 with
-`arm-none-eabi-gcc` 15.2.0 reproduced it byte-for-byte, including
-`2be0da7781750e0062dbb585dcfd7aa50cae40c28cab54201eb7e86479f05cc2`, so the
-checksum is a rebuild target when the toolchain matches. Pinning also keeps the
-EEPROM magic stable, which is what makes "reflashing this image keeps your
-keymap" true for rebuilds as well: a build on another day changes the magic and
-resets the keymap once.
+the date digits, not the string. Those digits are what the keymap depends on: a
+build on another day changes the magic and resets the keymap once, while a
+rebuild on the same day keeps it.
 
 ## The Python 3.12 trap
 

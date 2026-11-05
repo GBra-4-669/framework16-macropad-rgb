@@ -1,9 +1,8 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Framework Laptop 16 RGB Macropad: hidraw access for VIA and the deck tooling.
 #
-# The udev uaccess ACL did not survive re-enumeration on the machine this was
-# written on, so the rule also grants the input group, which is what made the
-# node readable there. That group can read every input device, not only this
+# The udev uaccess ACL did not survive re-enumeration here, so the rule also
+# grants the input group, which is what made the node readable. That group can read every input device, not only this
 # module; docs/FLASHING.md says what the trade costs and how to drop the group
 # if your machine keeps the ACL.
 #

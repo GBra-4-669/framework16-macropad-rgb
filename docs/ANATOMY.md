@@ -85,7 +85,7 @@ defaults rather than chain to them, which is listed as a limit in the README.
    blue. The same function answers the read-only `0xF0` and `0xF1` diagnostics
    from the live layer state.
 
-The data flow is two halves that never call each other:
+The two halves never call each other:
 
     host program
         │  32-byte raw HID report
@@ -127,6 +127,6 @@ tells "the keypad did not change layer" from "the firmware did not notice".
 * `panel_active_layer()` asks both `layer_state` and `default_layer_state` and
   takes the higher one, because `TO()` and `DF()` move different registers and
   either one can be the layer in force.
-* The `>= PANEL_CELLS` check in the VIA handler is the boundary between the
-  fifteen panel cells and cell 15, which is accepted, stored and left to the
-  dim pass: the panel never uses it, so the key at that position stays dim.
+* The `>= PANEL_CELLS` check in the VIA handler refuses value ids from 16 up.
+  Cell 15 is inside the 4 by 4 grid but outside the panel, so it is accepted,
+  stored and left to the dim pass.

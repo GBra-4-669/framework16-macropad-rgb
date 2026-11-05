@@ -59,7 +59,7 @@ it from memory.
 
 ## The way back
 
-Two independent ways back, both from Framework:
+Both ways back come from Framework:
 
 * the stock firmware, published as `framework_macropad_default_v0.3.1.uf2` on the
   [v0.3.1 release](https://github.com/FrameworkComputer/qmk_firmware/releases/tag/v0.3.1)
@@ -67,8 +67,7 @@ Two independent ways back, both from Framework:
 * `erase_flash.uf2` on the same release. Read Framework's instructions before
   using it; it is not a macropad-specific file.
 
-Neither is included in this repository. Download one before you need it, not
-after.
+Neither is included in this repository; download one now.
 
 ## Before the first flash
 
@@ -227,11 +226,11 @@ adds the systemd `uaccess` tag:
     sudo udevadm trigger
     sudo usermod -aG input $USER     # then log in again
 
-The group is not decoration. On the machine this was written on, the `uaccess`
-ACL did not come back after the module re-enumerated following a flash; the node
-was `root:root 0600` even though the udev database showed the tag, and only root
-could open it. With `MODE="0660", GROUP="input"` it comes back `root:input` and
-the group can open it. The cost is that the `input` group can read every input
+The group is there because the ACL did not survive re-enumeration here: after
+the module re-enumerated following a flash, the node was `root:root 0600` even
+though the udev database showed the tag, and only root could open it. With
+`MODE="0660", GROUP="input"` it comes back `root:input` and the group can open
+it. The cost is that the `input` group can read every input
 device on the machine, not only this module. If your machine keeps the ACL, drop
 the `GROUP="input"` part and rely on `uaccess`; the rule still matches only this
 vendor and product. The flasher also re-triggers udev and waits before it gives
@@ -255,7 +254,7 @@ up on opening the module.
 | `--status` shows | The firmware thinks | Look at |
 |---|---|---|
 | layer changed, colour changed | everything works | the host program and its palette push |
-| layer changed, colour stale | the layer moved, the write was overwritten | the boot-time colour and the brightness reset in the limits |
+| layer changed, colour stale | the layer moved, the write was overwritten | the boot-time colour in the limits |
 | layer did not change | the keymap did not move the layer, or a hook put it back | layer keys in the EEPROM keymap, the `led_update_user` trap |
 | `not implemented by this firmware` | the module is not running this patch | flash the image |
 | `None` | the module did not answer | udev permissions, or another process holding the interface |

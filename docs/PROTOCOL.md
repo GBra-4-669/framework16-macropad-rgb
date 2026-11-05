@@ -135,8 +135,7 @@ The four layer keys in the keymap this was built for are called tc0 to tc3.
 | 2 | tc2 | 42 | 255 |
 | 3 | tc3 | 0 | 255 |
 
-The panel reads this hue to know which layer is in force. It is an indirect
-signal.
+The panel reads this hue to know which layer is in force.
 
 There is one caveat at boot. The RGB matrix loads its saved colour from EEPROM
 during init, after the layer hooks have run, so until the first layer change
@@ -145,7 +144,7 @@ if you need the layer in that window.
 
 ## Diagnostics: 0xF0 and 0xF1
 
-Both diagnostics answer with three bytes:
+The diagnostics answer with three bytes:
 
 | `value_id` | byte 3 | byte 4 | byte 5 |
 |---|---|---|---|
@@ -195,7 +194,7 @@ carry something are shown:
 
 ## Driving it from Python
 
-The whole protocol is short enough to write out. This is the same idea the
+ This is the same idea the
 flasher uses, condensed and without the keymap commands or the error handling:
 
     import glob, os, select, time
@@ -284,8 +283,7 @@ in QMK, through `via_command_kb` if the keyboard defines one. Probe channel 0 on
 the stock firmware, because if every request answers `id_unhandled` the channel is
 free. Add `via_custom_value_command_kb` for your own value ids, and a paint
 callback that runs after the effect if you want per-key colour. Then decide what a
-cell means for your keypad, because that vocabulary is the only thing the host
-and the firmware share.
+cell means for your keypad.
 
 ## Things to try on the module
 

@@ -41,12 +41,11 @@ Copied into `keyboards/framework/macropad/`:
 
 ## The tree patches
 
-Two changes are applied to the tree before building. They belong to QMK, not to
-this repository, so they are not committed here.
+Two patches go on the tree before the build, and both are QMK's. They are not
+committed here.
 
-The first is for Python 3.12 and later, where `ast.Num` no longer exists. Without
-it the CLI dies while reading `info.json`, and the makefile reports it as
-`Platform not defined`. In `lib/python/qmk/math.py`:
+The first is for Python 3.12 and later, where `ast.Num` no longer exists. In
+`lib/python/qmk/math.py`:
 
     -        if isinstance(node, ast.Num):
     -            return node.n
@@ -84,8 +83,7 @@ The date is pinned, so the output does not depend on when the build runs:
 
 The result was renamed from `framework_macropad_palette.uf2` to
 `firmware-panel-palette.uf2`. Its sha256 is in
-`firmware-panel-palette.uf2.sha256` and in the v0.1.0 release: two clean builds
-of this recipe gave that same file.
+`firmware-panel-palette.uf2.sha256` and in the v0.1.0 release.
 
 ## Reproducibility
 
@@ -101,8 +99,6 @@ image, or rebuilding it with this command, leaves the stored keymap alone. A
 build with another compiler or QMK CLI can produce different bytes; a build on
 another date also changes the magic and resets the keymap once.
 
-The image was built from the files here, so there are no source changes after
-the build.
 
 ## Written offer
 

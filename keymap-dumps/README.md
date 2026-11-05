@@ -17,5 +17,5 @@ length, in 23 chunks of 28 bytes except the last of 24. `flash-macropad.py` does
 this before and after flashing.
 
 Back up your own before flashing (`--dump FILE`, or run the flasher, which always
-dumps first); a flash resets EEPROM to the compiled keymap, and the only copy of
-yours will be the one you took beforehand.
+dumps first); a flash resets EEPROM to the compiled keymap, so take the dump
+first.
