@@ -1,0 +1,71 @@
+Attribution for this repository
+
+The files here are a patch applied on top of Framework Computer's QMK firmware
+fork. Most of the keyboard definition is not mine.
+
+Original work
+-------------
+keyboards/framework/macropad/panel_palette.c
+keyboards/framework/macropad/keymaps/palette/keymap.c (the changes to it)
+keyboards/framework/macropad/rules.mk (the added line)
+flash-macropad.py
+tests/test_flash_macropad.py
+udev/99-framework-macropad-via.rules
+the documentation and the images
+
+Copyright (C) 2026 Giulio Bramanti
+
+Licensed under the GNU General Public License, version 2, or (at your option)
+any later version. The full text of version 2 is in LICENSE.
+
+Framework Computer's work
+-------------------------
+keyboards/framework/macropad/ is Framework's keyboard definition, taken from
+https://github.com/FrameworkComputer/qmk_firmware, branch fl16-2025.
+Copyright (C) 2022 Framework Computer.
+Licensed GPL-2.0-or-later.
+
+keymaps/palette/keymap.c is Framework's default macropad keymap with the layer
+hooks removed. The keycode tables are theirs; the removal is mine.
+
+keymap-dumps/framework-default.hex is a copy of the keymap Framework's compiled
+layout produces in the module's EEPROM, so it is their layout too.
+keymap-dumps/eeprom-keymap-2026-09-16.hex is the keymap this module was running
+during the work, which is a remap of that layout.
+
+The firmware image firmware-panel-palette.uf2 is built from that tree with these
+files dropped in. It therefore contains Framework's and QMK's code, not only
+mine. SOURCE.md records the exact commit, the submodule versions and the one
+patch applied to the tree, and carries a written offer for the source.
+
+QMK
+---
+QMK is at https://github.com/qmk/qmk_firmware, licensed GPL-2.0-or-later.
+
+Other code in the image
+-----------------------
+QMK's RP2040 build links code from other projects, and the image therefore
+contains it too:
+
+* ChibiOS, licensed GPL-3.0, at https://www.chibios.org;
+* the Raspberry Pi Pico SDK, licensed BSD-3-Clause, at
+  https://github.com/raspberrypi/pico-sdk;
+* small MIT and BSD licensed libraries that QMK vendors.
+
+Their licence texts are in the build tree, under `lib/`. There is no separate
+archive of them in this repository; SOURCE.md says how to get the tree and
+carries a written offer for the complete source of the image.
+
+VIA
+---
+VIA is the keyboard configurator at https://www.caniusevia.com. This repository
+implements part of its raw HID protocol. VIA itself is not included.
+
+Trademarks
+----------
+Framework, Framework Laptop 16 and RGB Macropad are trademarks of Framework
+Computer Inc. This repository is not affiliated with Framework, and nothing here
+is a Framework release or supported by them.
+
+I am Giulio Bramanti. Older commit messages and the keyboard firmware use the
+handle GBra 4.669, and earlier drafts of panel_palette.c used gbra.

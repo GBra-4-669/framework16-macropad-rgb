@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
 # Framework Laptop 16 RGB Macropad: hidraw access for VIA and the deck tooling.
 #
 # The shipped firmware re-enumerates on flash and on replug, and on this machine
