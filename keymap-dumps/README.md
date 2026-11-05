@@ -2,18 +2,19 @@
 
 VIA stores the dynamic keymap in the module's EEPROM. Each dump here is 640 bytes:
 10 layers x 4 matrix rows x 8 columns, 2 bytes per keycode, keycodes stored
-most-significant byte first. This is the layout the keypad runs, not the compiled
+big-endian. This is the layout the keypad runs, not the compiled
 keymap in the firmware.
 
 | File | What it is |
 |---|---|
-| `framework-default.hex` | what a flash leaves in EEPROM: Framework's compiled layout, their custom keycodes on layer 1, the RGB controls on layer 2 |
+| `framework-default.hex` | what a flash leaves in EEPROM: Framework's compiled layout. Layer 0 is the numpad, layer 1 is the RGB controls, layer 2 is their factory test alphabet, and layers 3 to 9 are transparent |
 | `eeprom-keymap-2026-09-16.hex` | the keymap on this module during the per-key colour work: `TO(0)`-`TO(3)` on layer 0 at matrix positions (2,1), (2,2), (3,4), (2,4), then Framework's numpad layout |
 
 Reading and writing it over VIA: `id_dynamic_keymap_get_buffer` (`0x12`) and
 `id_dynamic_keymap_set_buffer` (`0x13`), each with a 2-byte big-endian offset and a
-length, in chunks of 28 bytes or so. `flash-macropad.py` does this before and after
+length, in 28-byte chunks. `flash-macropad.py` does this before and after
 flashing.
 
-Back up your own before flashing (`--backup-dir`) - a flash resets EEPROM to the
-compiled keymap, and the only copy of yours will be the one you took beforehand.
+Back up your own before flashing (`--dump FILE`, or run the flasher, which always
+dumps first); a flash resets EEPROM to the compiled keymap, and the only copy of
+yours will be the one you took beforehand.

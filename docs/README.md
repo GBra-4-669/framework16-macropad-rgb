@@ -1,12 +1,13 @@
-# Media
+# Docs
 
-Two images are referenced by the top-level `README.md`:
+The README is the overview. These files are the long version.
 
-| File | What it should show |
+| File | What is in it |
 |---|---|
-| `macropad-and-panel.jpg` | a photo of the macropad next to the screen, with the panel's cells and the keypad's keys in the same colours |
-| `deck-panel.png` | a screenshot of the panel UI that sets the palette |
+| [ANATOMY.md](ANATOMY.md) | What a QMK keyboard is made of, and where this patch sits in it |
+| [BUILD.md](BUILD.md) | Toolchain, the QMK tree this patch goes into, compiling, checking the image |
+| [FLASHING.md](FLASHING.md) | Bootloader, the flasher, doing it by hand, recovery, the keymap problem |
+| [PROTOCOL.md](PROTOCOL.md) | The VIA custom channel: every byte, with examples |
+| [session-2026-09-16.md](session-2026-09-16.md) | The dated session log: what was tried, what failed, in the order it happened |
+| `images/` | The photos and the GIF used by the README |
 
-Keep them under ~1600px wide and a few hundred kB each so the README stays quick to
-load. If either file is missing, remove its line from the README rather than pushing
-a broken image link.
