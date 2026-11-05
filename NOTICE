@@ -35,8 +35,8 @@ during the work, which is a remap of that layout.
 
 The firmware image firmware-panel-palette.uf2 is built from that tree with these
 files dropped in. It therefore contains Framework's and QMK's code, not only
-mine. SOURCE.md records the exact commit, the submodule versions and the one
-patch applied to the tree, and carries a written offer for the source.
+mine. SOURCE.md records the exact commit, the submodule versions and the two
+patches applied to the tree, and carries a written offer for the source.
 
 QMK
 ---

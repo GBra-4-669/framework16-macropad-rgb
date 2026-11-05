@@ -174,8 +174,8 @@ Not part of the palette, but used by the flasher before and after every flash.
 | read | `12 <offset hi> <offset lo> <length>` | `12 <hi> <lo> <length> <data...>` |
 | write | `13 <offset hi> <offset lo> <length> <data...>` | echo |
 
-The keymap is 640 bytes, read and written in 28-byte chunks, which is what fits
-in a 32-byte report after the four header bytes. The layout is in
+The keymap is 640 bytes, read and written in 23 chunks of 28 bytes, except the
+last of 24, which is what fits in a 32-byte report after the four header bytes. The layout is in
 [keymap-dumps/README.md](../keymap-dumps/README.md).
 
 ## A worked exchange

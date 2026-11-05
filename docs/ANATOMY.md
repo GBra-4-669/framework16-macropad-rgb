@@ -21,9 +21,10 @@ keymap is C, built into the image, and is what QMK copies into EEPROM when the
 stored one is invalid. The dynamic keymap is those 640 bytes in EEPROM, edited
 by VIA at runtime.
 
-What makes the stored keymap invalid is a magic derived from the build date
-(`quantum/via.c`, `via_eeprom_is_valid`). A new build changes it, so the first
-boot after a rebuild starts from the compiled keymap. Reflashing the same image
+What makes the stored keymap invalid is a magic derived from the date digits of
+the build date (`quantum/via.c`, `via_eeprom_is_valid`). A build on another date
+changes it, so the first boot after such a rebuild starts from the compiled
+keymap. Reflashing the same image
 leaves the magic alone and keeps the stored keymap. The emulated EEPROM lives in
 the top of the 1 MiB flash, above the image, so writing the image does not
 overwrite it.

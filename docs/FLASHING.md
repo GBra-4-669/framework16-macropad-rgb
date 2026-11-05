@@ -191,7 +191,8 @@ first flash the module came back running the compiled `default` keymap: 72 of th
 320 keycodes had changed.
 
 The dynamic keymap is 640 bytes. Dumping and restoring uses VIA's buffer
-commands, 28 bytes at a time, 23 chunks, and the restore was verified by reading
+commands in 23 chunks, 28 bytes each except the last (24 bytes), and the restore
+was verified by reading
 the whole thing back. The layout is in
 [keymap-dumps/README.md](../keymap-dumps/README.md). The keymap this module runs
 has the four layer keys and `KC_NO` everywhere else, because the host watches the
@@ -202,25 +203,24 @@ The cause is the build date. QMK keeps a magic in EEPROM derived from
 `QMK_BUILDDATE`, and when it does not match, `via_eeprom_is_valid()` fails and
 `eeconfig_init_via()` copies the compiled keymap over the stored one
 (`quantum/via.c`). A different build has a different date, so the first boot
-after a rebuild starts from the compiled keymap. Reflashing the same image keeps
-the magic valid and leaves the stored keymap alone, because the emulated EEPROM
-sits above the image in the same flash. The date can be pinned with
-`SOURCE_DATE_EPOCH` as [BUILD.md](BUILD.md#the-build-date-and-reproducibility)
-explains; with it, a rebuild keeps the magic too. That is why the script dumps
-before and restores after.
+after a build with another date starts from the compiled keymap. This image pins
+the date, so reflashing it, or rebuilding it with the command in
+[BUILD.md](BUILD.md#the-build-date-and-reproducibility), keeps the magic valid and
+leaves the stored keymap alone, because the emulated EEPROM sits above the image
+in the same flash. That is why the script dumps before and restores after.
 
-There is a consequence if you flash by hand and do not restore a keymap. The
-compiled keymap in this patch is Framework's layout with its layer hooks
-removed, and the layer keys live in the EEPROM keymap, so after a flash without
-a restore the module is a numpad on layer 0 with no route to layers 1 and 2,
-where the RGB and backlight controls are. The flasher puts your keymap back; a
+There is a consequence if you flash by hand and do not restore a keymap across
+a build with a different date. The compiled keymap in this patch is Framework's
+layout with its layer hooks removed, and the layer keys live in the EEPROM keymap,
+so after such a flash the module is a numpad on layer 0 with no route to layers 1
+and 2, where the RGB and backlight controls are. The flasher puts your keymap back; a
 hand flash does not, so do the `--restore` at the end.
 
 ## udev
 
 The module exposes its raw HID interface as a hidraw node, and by default that
-node is `root:root 0600`. The rule in `udev/` gives it to the `input` group and
-adds the systemd `uaccess` tag:
+node is `root:root 0600`. The rule in `udev/` gives it to the logged-in seat with
+the systemd `uaccess` tag:
 
     sudo cp udev/99-framework-macropad-via.rules /etc/udev/rules.d/
     sudo udevadm control --reload-rules

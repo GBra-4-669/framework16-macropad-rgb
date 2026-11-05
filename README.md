@@ -4,7 +4,7 @@
 
 A QMK firmware patch for the Framework Laptop 16 RGB Macropad that lets software
 on the host give each key its own colour (color) while the keyboard is running.
-The stock firmware only sets one colour for all 24 keys.
+The stock firmware only exposes global colour controls; it has no per-key API.
 
 The patch adds VIA's keyboard-specific custom channel, so a host program can set
 a colour per key over raw HID without reflashing anything.
@@ -26,7 +26,7 @@ matching it to the panel instead of counting from a corner.
 
 VIA can talk to the shipped firmware, and what it can set on the RGB matrix
 channel is global: brightness, effect, effect speed, hue, saturation. One colour
-for all 24 keys, or an effect that cycles them all together. VIA also has a
+for all 24 keys, or an effect that drives the whole matrix at once. VIA also has a
 keyboard-specific custom channel, channel 0, and that is where per-key control
 belongs, but the macropad's shipped firmware does not implement it. Framework's
 own `qmk_hid` exposes the same global RGB controls, not a per-key API.
@@ -40,7 +40,7 @@ no reflash.
 
 | | |
 |---|---|
-| Module | Framework Laptop 16 RGB Macropad, an Input Module that clips into the laptop |
+| Module | Framework Laptop 16 RGB Macropad, an Input Module held in place by magnets |
 | Keys | 24, in 4 columns and 6 rows |
 | MCU | RP2040, 264 KiB SRAM, 1 MiB QSPI flash |
 | USB | vendor `0x32AC`, product `0x0013` |
@@ -232,7 +232,7 @@ Numbers you can check here:
 |---|---|
 | Keys | 24, in 4 columns by 6 rows; 15 of them are panel keys |
 | Full palette push | 45 bytes of colour in 15 reports, 32 bytes each on the wire |
-| EEPROM keymap | 640 bytes, read or written in 23 chunks of 28 |
+| EEPROM keymap | 640 bytes, read or written in 23 chunks: 28 bytes each, 24 in the last |
 | Image | 113,664 bytes, 222 UF2 blocks of 256 payload bytes |
 | Layer state | one HID read, so the panel does not have to poll the keypad |
 
@@ -258,11 +258,12 @@ Most of these are not specific to this macropad.
    of a new disk or as the disk itself, and the names differ by bus. Mount the
    node `lsblk` labels `RPI-RP2`, never a remembered `/dev/sdX`.
 
-3. A rebuilt image resets the dynamic keymap. The first one changed 72 of 320
-   keycodes, because the module came back on Framework's compiled layout instead
-   of the remapped one. The cause is QMK's EEPROM validity magic, which is
-   derived from the build date, so a new build invalidates the stored keymap and
-   a reflash of the same image does not. Dump the 640-byte keymap before flashing
+3. A rebuild with a different build date resets the dynamic keymap. The first
+   one changed 72 of 320 keycodes, because the module came back on Framework's
+   compiled layout instead of the remapped one. The cause is QMK's EEPROM
+   validity magic, which is derived from the date digits of the build date, so a
+   build on another date invalidates the stored keymap and a reflash of the same
+   image does not. Dump the 640-byte keymap before flashing
    and write it back after, then read it out again to check.
 
 4. Framework's layer hooks collide with a user layer map. Their default
@@ -313,9 +314,9 @@ Known issues in this image, planned for v0.2:
 * The `_kb` hooks do not chain to the `_user` versions, so a keymap that defines
   `layer_state_set_user` or `rgb_matrix_indicators_advanced_user` will not have
   them called.
-* The compiled keymap has no layer key; it is what a hand flash leaves behind,
-  and it can only reach layer 0. The flasher restores the EEPROM keymap, which
-  has the layer keys.
+* The compiled keymap has no layer key; it is what a hand flash from a build
+  with another date leaves behind, and it can only reach layer 0. The flasher
+  restores the EEPROM keymap, which has the layer keys.
 * At boot, channel 3 reports the colour loaded from EEPROM until the first layer
   change. Read `0xF0` if you need the layer before then.
 * The layer colour has four hues, so layers 4 to 9 reuse them. Use `0xF0` past

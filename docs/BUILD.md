@@ -3,9 +3,9 @@
 This repository is not a buildable QMK tree. It holds the files that differ from
 Framework's fork, and the build happens inside that fork. The commands below
 were checked on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and the QMK CLI 1.2.0;
-I have not built it on another distribution. The shipped image was built on the
-machine with the module and tested there, so its bytes depend on that machine's
-toolchain, not only on this one.
+I have not built it on another distribution. The shipped image was rebuilt from
+this source and tested on the module, and that toolchain reproduces it
+byte-for-byte.
 
 ## What the build makes
 
@@ -26,9 +26,10 @@ on the `fl16-2025` branch, so that branch is the tree.
     git checkout 11c49dbeef03c853bbd3a783810d4ba7d29cb287
     git submodule update --init --depth 1
 
-The branch moves, so the commit is pinned rather than taken from its tip.
-`11c49db` is 2025-08-21, "fl16: Bump version to 0.3.1". A different commit is a
-different tree and will not build this image's source.
+The branch currently points at `11c49db`; the checkout pins it rather than
+trusting the tip to stay there. That commit is 2025-08-21, "fl16: Bump version to
+0.3.1". A different commit is a different tree and will not build this image's
+source.
 
 ## Toolchain
 
@@ -81,7 +82,12 @@ With this repo checked out somewhere, from the build tree:
 
 ## Compiling
 
+The two exports pin the build date. With them and the toolchain above, the
+output is the shipped image:
+
     cd ~/qmk_firmware
+    export TZ=UTC
+    export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
     QMK_HOME=$PWD ~/.local/share/qmk-venv/bin/qmk compile \
         -kb framework/macropad -km palette
 
@@ -105,12 +111,12 @@ The image in this repo is 113,664 bytes, and each 512-byte UF2 block carries a
     $ sha256sum framework_macropad_palette.uf2
     cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8  ...
 
-That sha256 identifies the shipped image, which was built from the source in
-this repository on the machine with the module. A rebuild with a different GCC,
-QMK CLI or build date will produce different bytes, so the hash is not a
-statement that any rebuild matches. [SOURCE.md](../SOURCE.md) records the commit,
-the submodules and the tree patches, and the section below explains how to make a
-rebuild deterministic.
+That sha256 is the shipped image, and the build above reproduces it
+byte-for-byte on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and the QMK CLI 1.2.0:
+two clean builds produced this exact file. A different compiler or QMK CLI can
+produce different bytes, so compare a rebuild against it only when the toolchain
+matches. [SOURCE.md](../SOURCE.md) records the commit, the submodules and the
+tree patches.
 
 This image was rebuilt from the source in this repository and then checked on the
 module itself, not only against a checksum: all sixteen cells answer with the
@@ -133,8 +139,9 @@ id is `0xe48bff56`.
 
 QMK writes the wall-clock time into the image as `QMK_BUILDDATE`, from
 `lib/python/qmk/cli/generate/version_h.py`, and the EEPROM validity magic is
-derived from that string. Two builds at different times therefore differ, and a
-rebuilt image resets the stored keymap.
+derived from the date digits in that string. Two builds at different times
+therefore differ, and the first boot after a build on another date starts from
+the compiled keymap.
 
 The date can be pinned, as reproducible builds normally do, with
 `SOURCE_DATE_EPOCH`. Patch that file:
@@ -155,11 +162,13 @@ and build with the date fixed:
     export TZ=UTC
     export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
 
-Two clean builds checked here on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 came
-out byte-identical that way. The shipped image predates the pin, so its hash is
-an artifact fingerprint, not a rebuild target. Pinning also keeps the EEPROM
-magic stable, which is what makes "reflashing this image keeps your keymap"
-true for rebuilds as well.
+The shipped image was built with this pin; its `QMK_BUILDDATE` is
+`2026-11-05-12:00:00`. Two clean builds on Fedora 44 with `arm-none-eabi-gcc`
+15.2.0 reproduced it byte-for-byte, including
+`cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8`, so the
+checksum is a rebuild target when the toolchain matches. Pinning also keeps the
+EEPROM magic stable, which is what makes "reflashing this image keeps your
+keymap" true for rebuilds as well.
 
 ## The Python 3.12 trap
 

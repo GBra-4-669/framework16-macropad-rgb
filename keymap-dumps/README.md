@@ -13,8 +13,8 @@ keymap in the firmware.
 
 Reading and writing it over VIA: `id_dynamic_keymap_get_buffer` (`0x12`) and
 `id_dynamic_keymap_set_buffer` (`0x13`), each with a 2-byte big-endian offset and a
-length, in 28-byte chunks. `flash-macropad.py` does this before and after
-flashing.
+length, in 23 chunks of 28 bytes except the last of 24. `flash-macropad.py` does
+this before and after flashing.
 
 Back up your own before flashing (`--dump FILE`, or run the flasher, which always
 dumps first); a flash resets EEPROM to the compiled keymap, and the only copy of
