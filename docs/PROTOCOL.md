@@ -59,7 +59,8 @@ palette lives.
 
 The "save" command is accepted and does nothing. The palette belongs to the host:
 if the keypad kept a copy in EEPROM and the host changed its table while the
-module was unplugged, the keypad would show colours the panel no longer uses.
+module was unplugged, the keypad would show colours the panel no longer uses. A
+full palette is 15 requests: 45 bytes of colour in 480 bytes of reports.
 
 Anything the firmware does not handle comes back with `command_id` set to
 `0xFF`, so a host can tell "this firmware does not have the palette" from "this
@@ -68,10 +69,10 @@ firmware" and the second as `None`, which are different things.
 
 ### Which cell is which key
 
-Cells are numbered row-major over the keypad, four columns, starting one row
-below the top row:
+Cells are row-major over the 4 by 4 panel grid. The keypad row is 1-based (1 to
+4) and the column is 0-based (0 to 3):
 
-    cell = (keypad row - 1) * 4 + keypad column
+    cell = (keypad row - 1) * 4 + column
 
 | cell | panel position | keypad row, col | LED index |
 |---|---|---|---|
@@ -96,7 +97,9 @@ The panel's grid is 4 by 4 and the keypad has 24 keys, so 15 of them are panel
 keys. The sixteenth cell of the grid falls on a key that exists (LED index 13)
 but that the panel does not map. Writing to cell 15 is accepted and stored, and
 the panel never uses it: the paint pass skips the cell, so the key keeps the dim
-layer colour like the other non-panel keys.
+layer colour like the other non-panel keys. Value ids 16 to 255 are answered with
+`id_unhandled` before any array is indexed, so a writer cannot reach past
+`panel_rgb`.
 
 The remaining nine keys are not panel keys: the four layer keys in the top row,
 the four keys in the bottom row, and the one key at row 4, column 3. They are
@@ -286,7 +289,7 @@ and the firmware share.
 ## Things to try on the module
 
 * Write cell 15 and read it back. The value is stored and nothing on the keypad
-  changes. Write cell 16: the answer is `id_unhandled`.
+  changes. Write cell 16 or cell 255: the answer is `id_unhandled`.
 * Set cell 0 to red and replug the module. Cell 0 is back to the firmware's
   default palette, because the palette lives in RAM and nothing keeps a copy; a
   host that is still running pushes its own table again when the module returns.

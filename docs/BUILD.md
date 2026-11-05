@@ -1,8 +1,11 @@
 # Build
 
 This repository is not a buildable QMK tree. It holds the files that differ from
-Framework's fork, and the build happens inside that fork. Everything below was
-done on Fedora 43; I have not built it on another distribution.
+Framework's fork, and the build happens inside that fork. The commands below
+were checked on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 and the QMK CLI 1.2.0;
+I have not built it on another distribution. The shipped image was built on the
+machine with the module and tested there, so its bytes depend on that machine's
+toolchain, not only on this one.
 
 ## What the build makes
 
@@ -17,15 +20,15 @@ The macropad's keyboard definition is not in upstream QMK. It lives in
 [FrameworkComputer/qmk_firmware](https://github.com/FrameworkComputer/qmk_firmware)
 on the `fl16-2025` branch, so that branch is the tree.
 
-    git clone --branch fl16-2025 --depth 1 \
-        https://github.com/FrameworkComputer/qmk_firmware.git ~/qmk-framework
-    cd ~/qmk-framework
+    git clone --branch fl16-2025 \
+        https://github.com/FrameworkComputer/qmk_firmware.git ~/qmk_firmware
+    cd ~/qmk_firmware
+    git checkout 11c49dbeef03c853bbd3a783810d4ba7d29cb287
     git submodule update --init --depth 1
 
-The branch was last touched in August 2025, at commit `11c49db` ("fl16: Bump
-version to 0.3.1"). Check `git rev-parse HEAD` if you care about getting the same
-bytes as the image in this repo: a different commit means a different tree, and
-the output will not match.
+The branch moves, so the commit is pinned rather than taken from its tip.
+`11c49db` is 2025-08-21, "fl16: Bump version to 0.3.1". A different commit is a
+different tree and will not build this image's source.
 
 ## Toolchain
 
@@ -43,9 +46,10 @@ managed and pip will not install into it. A venv solves that and keeps the
 build tree's Python requirements out of the system. Run this from the root of
 the tree, because `requirements.txt` is the tree's:
 
-    cd ~/qmk-framework
+    cd ~/qmk_firmware
     python3 -m venv ~/.local/share/qmk-venv
-    ~/.local/share/qmk-venv/bin/pip install qmk -r requirements.txt
+    ~/.local/share/qmk-venv/bin/pip install qmk
+    ~/.local/share/qmk-venv/bin/pip install -r requirements.txt
 
 Use the venv's `qmk` afterwards. `arm-none-eabi-gcc` still has to be on `PATH`.
 
@@ -77,7 +81,7 @@ With this repo checked out somewhere, from the build tree:
 
 ## Compiling
 
-    cd ~/qmk-framework
+    cd ~/qmk_firmware
     QMK_HOME=$PWD ~/.local/share/qmk-venv/bin/qmk compile \
         -kb framework/macropad -km palette
 
@@ -101,12 +105,12 @@ The image in this repo is 113,664 bytes, and each 512-byte UF2 block carries a
     $ sha256sum framework_macropad_palette.uf2
     cb3272582bc310512caa0a5c9118e19e796dd0d2f0b6e7d663f9e576b2b71bc8  ...
 
-That sha256 is what this machine produced with the toolchain above, for the
-source in this repository. A different
-GCC or QMK version will produce different bytes, so use it to
-check a rebuild against this repo, not as a proof that your build is correct.
-[SOURCE.md](../SOURCE.md) records the exact commit, the submodules and the one
-patch, and says plainly that the image is not bit-reproducible.
+That sha256 identifies the shipped image, which was built from the source in
+this repository on the machine with the module. A rebuild with a different GCC,
+QMK CLI or build date will produce different bytes, so the hash is not a
+statement that any rebuild matches. [SOURCE.md](../SOURCE.md) records the commit,
+the submodules and the tree patches, and the section below explains how to make a
+rebuild deterministic.
 
 This image was rebuilt from the source in this repository and then checked on the
 module itself, not only against a checksum: all sixteen cells answer with the
@@ -124,6 +128,38 @@ family id`:
 For an RP2040 image, `magic0` is `0x0a324655` (the bytes `UF2\n`), the target
 address is `0x10000000` (where the RP2040's QSPI flash is mapped), and the family
 id is `0xe48bff56`.
+
+## The build date and reproducibility
+
+QMK writes the wall-clock time into the image as `QMK_BUILDDATE`, from
+`lib/python/qmk/cli/generate/version_h.py`, and the EEPROM validity magic is
+derived from that string. Two builds at different times therefore differ, and a
+rebuilt image resets the stored keymap.
+
+The date can be pinned, as reproducible builds normally do, with
+`SOURCE_DATE_EPOCH`. Patch that file:
+
+    -from time import strftime
+    +from time import strftime, gmtime
+    +import os
+
+         if cli.args.skip_all:
+             current_time = "1970-01-01-00:00:00"
+    +    elif os.environ.get('SOURCE_DATE_EPOCH'):
+    +        current_time = strftime(TIME_FMT, gmtime(int(os.environ['SOURCE_DATE_EPOCH'])))
+         else:
+             current_time = strftime(TIME_FMT)
+
+and build with the date fixed:
+
+    export TZ=UTC
+    export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
+
+Two clean builds checked here on Fedora 44 with `arm-none-eabi-gcc` 15.2.0 came
+out byte-identical that way. The shipped image predates the pin, so its hash is
+an artifact fingerprint, not a rebuild target. Pinning also keeps the EEPROM
+magic stable, which is what makes "reflashing this image keeps your keymap"
+true for rebuilds as well.
 
 ## The Python 3.12 trap
 

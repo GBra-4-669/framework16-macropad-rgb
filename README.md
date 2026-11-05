@@ -3,6 +3,11 @@
 A firmware patch for the Framework Laptop 16 RGB Macropad that lets software on
 the host give each key its own colour while the keyboard is running.
 
+The patch adds VIA's keyboard-specific custom channel, so a host program can set
+a colour per key over raw HID without reflashing anything.
+[docs/ANATOMY.md](docs/ANATOMY.md) maps the firmware stack and
+[docs/PROTOCOL.md](docs/PROTOCOL.md) has the bytes.
+
 It exists for one use. A deck panel on the screen paints a grid of actions, the
 macropad is painted the same way from the same table, and a key is found by
 matching it to the panel instead of counting from a corner.
@@ -19,7 +24,7 @@ channel is global: brightness, effect, effect speed, hue, saturation. One colour
 for all 24 keys, or an effect that cycles them all together. VIA also has a
 keyboard-specific custom channel, channel 0, and that is where per-key control
 belongs, but the macropad's shipped firmware does not implement it. Framework's
-own `qmk_hid` uses the same channel table and has the same ceiling.
+own `qmk_hid` exposes the same global RGB controls, not a per-key API.
 
 The alternative was a firmware patch. This is it: channel 0, the layer colour on
 the channel the firmware already exposes, and nothing else in QMK changed. After
@@ -44,46 +49,18 @@ The keyboard definition is not in upstream QMK. It lives in
 on the `fl16-2025` branch, so building means cloning that fork rather
 than `qmk/qmk_firmware`. The module itself is hot swappable.
 
-## What is in this repository
-
-This is a patch, not a buildable tree. Nothing here compiles on its own: the
-three files under `keyboards/` are copied into Framework's fork and built there.
-If you just want to try it, the built image is included and there is nothing to
-compile.
-
-| Path | What it is |
-|---|---|
-| `keyboards/framework/macropad/panel_palette.c` | the whole addition: palette, painting, the VIA channel, diagnostics |
-| `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed, see [Lessons and traps](#lessons-and-traps) |
-| `keyboards/framework/macropad/rules.mk` | Framework's two settings plus the line that puts `panel_palette.c` in the build |
-| `firmware-panel-palette.uf2` | the built image, 113,664 bytes, also attached to the v0.1.0 release |
-| `firmware-panel-palette.uf2.sha256` | the checksum the flasher checks the image against, and which the release carries |
-| `flash-macropad.py` | keymap backup, bootloader jump, flash, verify, keymap restore |
-| `keymap-dumps/` | two EEPROM keymap dumps and the format they use |
-| `udev/99-framework-macropad-via.rules` | hidraw access as a normal user |
-| `tests/` | tests for the flasher's pure functions, run by `.github/workflows/tests.yml` |
-| `SOURCE.md` | what went into the binary: commit, submodules, the one tree patch, and a written offer |
-| `docs/` | anatomy, build, flashing and protocol notes, and the dated session log |
-
-If you want to understand the firmware rather than just flash it,
-[docs/ANATOMY.md](docs/ANATOMY.md) maps the stack the patch sits in and walks
-through `panel_palette.c` in reading order.
-
-The host side is not here. The panel widget, the key watcher and the palette
-table are a personal project and stay private. They are also not required: the
-firmware exposes a generic HID channel, and [docs/PROTOCOL.md](docs/PROTOCOL.md)
-documents every byte with a small Python client, so any program can set the
-colours.
-
 ## Build
 
 From a shell with `arm-none-eabi-gcc` installed:
 
-    git clone --branch fl16-2025 --depth 1 \
-        https://github.com/FrameworkComputer/qmk_firmware.git ~/qmk-framework
-    cd ~/qmk-framework && git submodule update --init --depth 1
+    git clone --branch fl16-2025 \
+        https://github.com/FrameworkComputer/qmk_firmware.git ~/qmk_firmware
+    cd ~/qmk_firmware
+    git checkout 11c49db          # the commit this image was built from
+    git submodule update --init --depth 1
     python3 -m venv ~/.local/share/qmk-venv
-    ~/.local/share/qmk-venv/bin/pip install qmk -r requirements.txt
+    ~/.local/share/qmk-venv/bin/pip install qmk
+    ~/.local/share/qmk-venv/bin/pip install -r requirements.txt
 
     R=/path/to/framework16-macropad-rgb
     K=keyboards/framework/macropad
@@ -107,10 +84,10 @@ expected image header and the sha256 to compare against.
 
 ## Flash
 
-> **A flash replaces the firmware, and a rebuilt image resets the EEPROM keymap
-> on first boot.** Both are recoverable: Framework publishes the stock image and
-> an erase image, and the module enters an RP2040 bootloader that appears as a
-> USB drive. Back the keymap up first. `flash-macropad.py` does that automatically and writes it back after
+> **A flash replaces the firmware, and a rebuild with a different date resets
+> the EEPROM keymap on first boot.** Both are recoverable: Framework publishes
+> the stock image and an erase image, and the module enters an RP2040 bootloader
+> that appears as a USB drive. Back the keymap up first. `flash-macropad.py` does that automatically and writes it back after
 > the flash. It uses `sudo` to mount the volume and copy the image; opening the
 > module does not. Read the script before you run it.
 
@@ -135,7 +112,9 @@ that appeared after the jump, so a second board sitting in its bootloader does
 not get this image written to it. It also compares sha256 of the copy against the
 source after writing it; that catches a copy that went wrong, but it runs after
 the module has rebooted, so the check that matters is the one before. Every path
-is an argument or next to the script.
+is an argument or next to the script. The `.sha256` file catches a bad download
+or a bad copy; anyone replacing the image can replace the checksum too, so it is
+not a signature.
 
 What it reports when it is done:
 
@@ -151,6 +130,37 @@ palette that did not update gets traced. [docs/FLASHING.md](docs/FLASHING.md)
 has the manual procedure, the failure modes, and the way back to stock
 firmware.
 
+## What is in this repository
+
+This is a patch, not a buildable tree. Nothing here compiles on its own: the
+three files under `keyboards/` are copied into Framework's fork and built there.
+If you just want to try it, the built image is included and there is nothing to
+compile.
+
+| Path | What it is |
+|---|---|
+| `keyboards/framework/macropad/panel_palette.c` | the whole addition: palette, painting, the VIA channel, diagnostics |
+| `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed, see [Lessons and traps](#lessons-and-traps) |
+| `keyboards/framework/macropad/rules.mk` | Framework's two settings plus the line that puts `panel_palette.c` in the build |
+| `firmware-panel-palette.uf2` | the built image, 113,664 bytes, also attached to the v0.1.0 release |
+| `firmware-panel-palette.uf2.sha256` | the checksum the flasher checks the image against, and which the release carries |
+| `flash-macropad.py` | keymap backup, bootloader jump, flash, verify, keymap restore |
+| `keymap-dumps/` | three EEPROM keymap dumps, including the one the module runs, and the format |
+| `udev/99-framework-macropad-via.rules` | hidraw access as a normal user |
+| `tests/` | tests for the flasher's pure functions, run by `.github/workflows/tests.yml` |
+| `SOURCE.md` | what went into the binary: commit, submodules, the two tree patches, and a written offer |
+| `docs/` | anatomy, build, flashing and protocol notes, and the dated session log |
+
+If you want to understand the firmware rather than just flash it,
+[docs/ANATOMY.md](docs/ANATOMY.md) maps the stack the patch sits in and walks
+through `panel_palette.c` in reading order.
+
+The host side is not here. The panel widget, the key watcher and the palette
+table are a personal project and stay private. They are also not required: the
+firmware exposes a generic HID channel, and [docs/PROTOCOL.md](docs/PROTOCOL.md)
+documents every byte with a small Python client, so any program can set the
+colours.
+
 ## The palette protocol
 
 The host talks to the firmware through VIA's raw HID interface. Reports are 32
@@ -163,11 +173,18 @@ the keyboard-specific channel; this firmware implements it like this:
 | get a cell | `08 00 <cell>` | `08 00 <cell> <r> <g> <b>` |
 | save | `09 00 <cell>` | echo, nothing is stored |
 
-A cell is a position on the 4 by 4 panel grid, numbered row-major from the
-top-left, and `cell = (keypad row - 1) * 4 + column`. There are 15 panel cells,
-because the sixteenth position on that grid is a key the panel does not use.
-Writing to cell 15 is accepted and nothing is drawn. The full table, with the
-LED index for each cell, is in [docs/PROTOCOL.md](docs/PROTOCOL.md#which-cell-is-which-key).
+A cell is a position on the 4 by 4 panel grid, row-major from the top-left:
+`cell = (keypad row - 1) * 4 + column`, where the keypad row is 1-based (1 to 4)
+and the column is 0-based (0 to 3). There are 15 panel cells, because the
+sixteenth position on that grid is a key the panel does not use. Writing to cell
+15 is accepted and nothing is drawn; value ids 16 to 255 are refused with
+`id_unhandled` before any array is indexed. The full table, with the LED index
+for each cell, is in
+[docs/PROTOCOL.md](docs/PROTOCOL.md#which-cell-is-which-key).
+
+The nine keys outside the panel are the four layer keys in the top row, the four
+keys in the bottom row and the key at row 4 column 3. They show the active
+layer's colour at 30 percent brightness.
 
 The palette lives in RAM and belongs to the host. The firmware does not save it:
 a copy in EEPROM would let the keypad show colours the panel stopped using while
@@ -208,14 +225,15 @@ Numbers you can check here:
 | What | Value |
 |---|---|
 | Keys | 24, in 4 columns by 6 rows; 15 of them are panel keys |
-| Full palette push | 15 reports, 6 bytes each, 45 bytes of colour in total |
+| Full palette push | 45 bytes of colour in 15 reports, 32 bytes each on the wire |
 | EEPROM keymap | 640 bytes, read or written in 23 chunks of 28 |
 | Image | 113,664 bytes, 222 UF2 blocks of 256 payload bytes |
 | Layer state | one HID read, so the panel does not have to poll the keypad |
 
-The rest come from the host-side tool, which is not in this repository.
-The panel opens about 0.09 s after a layer key, and the process costs 9 to 13
-percent of one core across the key watcher, the gate and the refresh. Those were
+Two timings come from the host-side tool, which is not in this repository, so
+they cannot be checked here. The panel opens about 0.09 s after a layer key, and
+the process costs 9 to 13 percent of one core across the key watcher, the gate
+and the refresh. Those were
 measured during the session and are written up in the
 [session log](docs/session-2026-09-16.md#what-it-costs-on-the-host). There is no
 harness for them here, so they are notes rather than a benchmark.
@@ -281,25 +299,20 @@ Most of these are not specific to this macropad.
 
 ### Limits of the shipped image
 
-The current image does not do these. Fixing them means changing the firmware and
-rebuilding, so they are written down instead of patched: the image here is the
-one that was tested on hardware.
+Known issues in this image, planned for v0.2:
 
 * A layer change sets the layer colour at full value, so it also puts matrix
-  brightness back to maximum. If you set brightness in VIA, pressing a layer key
-  overrides it.
-* At boot, channel 3 reports whatever colour the EEPROM loaded until the first
-  layer change. Read the diagnostics (`0xF0`) if you need the layer before then.
+  brightness back to maximum and overrides a brightness set in VIA.
 * The `_kb` hooks do not chain to the `_user` versions, so a keymap that defines
   `layer_state_set_user` or `rgb_matrix_indicators_advanced_user` will not have
   them called.
-* The layer colour only has four hues. Layers 4 to 9 reuse them, so a host that
-  reads the colour cannot tell layer 4 from layer 0. Use the diagnostics for
-  anything past layer 3.
-* A freshly flashed module runs the compiled keymap, which has no layer key
-  because the layer keys live in the EEPROM keymap this patch leaves alone. Until
-  you restore a keymap with layer keys, layer 0 is the only reachable layer. The
-  flasher restores yours; a hand flash does not.
+* The compiled keymap has no layer key; it is what a hand flash leaves behind,
+  and it can only reach layer 0. The flasher restores the EEPROM keymap, which
+  has the layer keys.
+* At boot, channel 3 reports the colour loaded from EEPROM until the first layer
+  change. Read `0xF0` if you need the layer before then.
+* The layer colour has four hues, so layers 4 to 9 reuse them. Use `0xF0` past
+  layer 3.
 
 ## Credits
 

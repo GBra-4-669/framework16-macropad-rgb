@@ -39,22 +39,49 @@ Copied into `keyboards/framework/macropad/`:
 * `keyboards/framework/macropad/rules.mk` (replaces Framework's two-line file)
 * `keyboards/framework/macropad/keymaps/palette/keymap.c` (new keymap)
 
-## The one tree patch
+## The tree patches
 
-The build tree still calls `ast.Num`, which Python 3.12 removed. The build was
-made with this change applied to `lib/python/qmk/math.py`, and it is not part of
-this repository because it belongs to QMK:
+Two changes are applied to the tree before building. They belong to QMK, not to
+this repository, so they are not committed here.
+
+The first is for Python 3.12 and later, where `ast.Num` no longer exists. Without
+it the CLI dies while reading `info.json`, and the makefile reports it as
+`Platform not defined`. In `lib/python/qmk/math.py`:
 
     -        if isinstance(node, ast.Num):
     -            return node.n
     +        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
     +            return node.value
 
-[docs/BUILD.md](docs/BUILD.md#the-python-312-trap) explains it, including the
-misleading error message it causes.
+The second pins the build date. QMK writes the wall-clock time into
+`QMK_BUILDDATE`, which lands in the image and seeds the EEPROM validity magic.
+In `lib/python/qmk/cli/generate/version_h.py`:
+
+    -from time import strftime
+    +from time import strftime, gmtime
+    +import os
+
+         if cli.args.skip_all:
+             current_time = "1970-01-01-00:00:00"
+    +    elif os.environ.get('SOURCE_DATE_EPOCH'):
+    +        current_time = strftime(TIME_FMT, gmtime(int(os.environ['SOURCE_DATE_EPOCH'])))
+         else:
+             current_time = strftime(TIME_FMT)
+
+[docs/BUILD.md](docs/BUILD.md#the-python-312-trap) explains the first one and the
+reproducibility section below uses the second.
 
 ## The build
 
+The shipped image was built from the files in this repository on the machine with
+the module, then tested there. That machine's compiler version was not recorded,
+so the build is not promised to reproduce the same bytes.
+
+The source is reproducible from the pinned commit, the two patches and these
+files. With the date pinned the build itself becomes deterministic:
+
+    export TZ=UTC
+    export SOURCE_DATE_EPOCH=1793880000     # 2026-11-05 12:00:00 UTC
     QMK_HOME=$PWD ~/.local/share/qmk-venv/bin/qmk compile \
         -kb framework/macropad -km palette
 
@@ -62,31 +89,36 @@ The result was renamed from `framework_macropad_palette.uf2` to
 `firmware-panel-palette.uf2`. Its sha256 is in
 `firmware-panel-palette.uf2.sha256` and in the v0.1.0 release.
 
-## What the image is not
+## Reproducibility
 
-It is not bit-for-bit reproducible from the steps above. The build happened on
-Fedora 43 in September 2026
-and the exact `arm-none-eabi-gcc` version was not recorded. A rebuild with a
-different toolchain will produce different bytes.
+The shipped image is not claimed to be bit-for-bit reproducible: QMK embeds the
+wall-clock build date unless the second patch above is applied, and the compiler
+that built the shipped image was not recorded. Its sha256 identifies the artifact
+that was tested, not any rebuild.
 
-The edits after the build changed comments, documentation, two unused static
-variables in `panel_palette.c`, and the layer scan in the same file: its bound
-went from 31 to 15 and the shift is on an unsigned value, so nothing shifts past
-the 16-bit register. None of those change what the firmware returns, but they
-mean the tree in this repository and the tree that was compiled are not textually
-identical.
+With the two patches and the pinned date, the build is deterministic on one
+machine: two clean builds here, Fedora 44 and `arm-none-eabi-gcc` 15.2.0, came
+out byte-identical at sha256
+`2be0da7781750e0062dbb585dcfd7aa50cae40c28cab54201eb7e86479f05cc2`. That is a
+check of the recipe, not the shipped image. A different compiler will still
+produce different bytes.
+
+The image was rebuilt from the files in this repository, so there are no source
+changes after the build.
 
 ## Written offer
 
 This is a written offer, valid for three years from the date of the v0.1.0
 release, to give anyone who asks the complete corresponding source for the
-published image. That means a source archive of the tree at the pinned commit,
-the submodules at the commits listed above, the files from this repository, the
-tree patch, and the licence texts of everything linked into the image. Open an
-issue on this repository and I will make it available.
+published image, under GPLv2 section 3(b). That means a source archive of the
+tree at the pinned commit, the submodules at the commits listed above, the files
+from this repository, the two tree patches, and the licence texts of everything
+linked into the image. Open an issue on this repository and I will make it
+available.
 
-The pinned commit, the submodule list and the patch above are written out in
-full so the tree can be rebuilt without asking.
+The pinned commit, the submodule list and the patches above are written out in
+full so the tree can be rebuilt without asking. A written offer under section
+3(b) stays valid for three years from the date of the v0.1.0 release.
 
 ## Licence
 

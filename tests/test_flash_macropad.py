@@ -201,3 +201,18 @@ def test_get_turns_an_unhandled_reply_into_the_sentinel():
         client.close()
         server.close()
         thread.join(timeout=1)
+
+
+def test_udev_rule_grants_only_the_seat():
+    rule = open(os.path.join(REPO, "udev", "99-framework-macropad-via.rules")).read()
+    assert 'TAG+="uaccess"' in rule
+    assert 'ATTRS{idVendor}=="32ac"' in rule
+    assert 'ATTRS{idProduct}=="0013"' in rule
+    active = "\n".join(line for line in rule.splitlines() if not line.strip().startswith("#"))
+    assert 'GROUP="input"' not in active, "the input group can read every input device"
+
+
+def test_readme_images_exist():
+    for name in ("macropad.jpg", "layers.gif", "macropad.mp4"):
+        path = os.path.join(REPO, "docs", "images", name)
+        assert os.path.getsize(path) > 1000, f"{name} is missing or empty"

@@ -115,7 +115,7 @@ tells "the keypad did not change layer" from "the firmware did not notice".
 
 * There are 10 dynamic keymap layers, so QMK sets `MAX_LAYER` to 10 and picks a
   16-bit `layer_state_t`: layers 0 to 9 exist and 9 is the highest. The register
-  is wider than the layer count. `panel_layer_of()` counts down from 31, past
+  is wider than the layer count. `panel_layer_of()` counts down from 15, above
   both; the bits that can match are the low ones. It stops at 1 because layer 0
   is the fallback, not something set by a layer key.
 * The four layer hues are 128, 85, 42 and 0 out of 255, which is about 180, 120,

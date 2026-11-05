@@ -2,9 +2,10 @@
 
 > **Read this before you run it.** Flashing replaces the firmware on the
 > macropad. It is recoverable: Framework publishes stock images, and the module
-> enters an RP2040 bootloader that shows up as a USB drive. A new build resets
-> the EEPROM keymap on first boot, because QMK's stored-keymap validity comes
-> from the build date. Reflashing the same image does not. Back the keymap up
+> enters an RP2040 bootloader that shows up as a USB drive. A rebuild with a
+> different build date resets the EEPROM keymap on first boot, because QMK's
+> stored-keymap validity comes from that date. Reflashing the same image does
+> not. Back the keymap up
 > first; the script in this repo does that automatically and puts it back
 > afterwards. The mount, the copy, the sync, the comparison, the unmount and the
 > udev retrigger use `sudo`; opening the module does not. Read the script before
@@ -71,8 +72,8 @@ after.
 
 ## Before the first flash
 
-1. **Back up the keymap.** A rebuilt image resets the EEPROM keymap on first
-   boot. The script dumps it before it touches the module, so running the script
+1. **Back up the keymap.** A rebuild with a different build date resets the
+   EEPROM keymap on first boot. The script dumps it before it touches the module, so running the script
    is the backup. If you are doing this by hand, do the dump first (see below).
 2. **Install the udev rule.** Without it the hidraw node belongs to root and the
    script cannot open the module as your user. See [udev](#udev).
@@ -143,7 +144,9 @@ the copy is a report, not a gate. It cannot stop the module booting, because the
 RP2040 bootloader reboots as soon as the last block is written. A short copy
 never reaches the last block, so the bootloader stays there and the mismatch
 leaves the module in it. A complete but corrupt copy has already rebooted by the
-time the comparison runs, and that is what the recovery image is for.
+time the comparison runs, and that is what the recovery image is for. The `.sha256`
+file catches a bad download or a bad copy; it is not a signature, because anyone
+who replaces the image can replace the checksum too.
 
 ## Doing it by hand
 
@@ -190,8 +193,10 @@ first flash the module came back running the compiled `default` keymap: 72 of th
 The dynamic keymap is 640 bytes. Dumping and restoring uses VIA's buffer
 commands, 28 bytes at a time, 23 chunks, and the restore was verified by reading
 the whole thing back. The layout is in
-[keymap-dumps/README.md](../keymap-dumps/README.md). The script does that
-automatically; by hand, `--dump` and `--restore` are the same code.
+[keymap-dumps/README.md](../keymap-dumps/README.md). The keymap this module runs
+has the four layer keys and `KC_NO` everywhere else, because the host watches the
+matrix for presses; keys that type nothing are expected. `--dump` and
+`--restore` are the same code the script uses.
 
 The cause is the build date. QMK keeps a magic in EEPROM derived from
 `QMK_BUILDDATE`, and when it does not match, `via_eeprom_is_valid()` fails and
@@ -199,8 +204,10 @@ The cause is the build date. QMK keeps a magic in EEPROM derived from
 (`quantum/via.c`). A different build has a different date, so the first boot
 after a rebuild starts from the compiled keymap. Reflashing the same image keeps
 the magic valid and leaves the stored keymap alone, because the emulated EEPROM
-sits above the image in the same flash. That is why the script dumps before and
-restores after.
+sits above the image in the same flash. The date can be pinned with
+`SOURCE_DATE_EPOCH` as [BUILD.md](BUILD.md#the-build-date-and-reproducibility)
+explains; with it, a rebuild keeps the magic too. That is why the script dumps
+before and restores after.
 
 There is a consequence if you flash by hand and do not restore a keymap. The
 compiled keymap in this patch is Framework's layout with its layer hooks
@@ -224,14 +231,14 @@ module re-enumerated following a flash. The node was `root:root 0600` even thoug
 the udev database showed the tag, and only root could open it. Nothing opens the
 module, which sends you looking in the wrong place.
 
-The rule has a second grant for that case: `GROUP="input"`, which makes the node
-readable without the ACL. That group can read every input device, not only this
-one, so the grant is a trade. If you would rather not have it, delete the
-`GROUP="input"` part and rely on `uaccess`, and if the node comes back
-unreadable, `sudo udevadm trigger --action=add --subsystem-match=hidraw` and
-replug. If you do want it, the membership is `sudo usermod -aG input $USER`,
-followed by a new login session. The script tries the trigger and waits before it
-gives up on opening the module.
+The shipped rule grants only `uaccess`. If the ACL does not come back on your
+machine, first re-trigger udev with
+`sudo udevadm trigger --action=add --subsystem-match=hidraw` and replug. If that
+does not hold, add `GROUP="input"` to the rule and join the group with
+`sudo usermod -aG input $USER`, then log in again. That group can read every
+input device, not only this module, so it is a trade; the rule does not make it
+for you. The script tries the re-trigger and waits before it gives up on opening
+the module.
 
 ## When it does not work
 
