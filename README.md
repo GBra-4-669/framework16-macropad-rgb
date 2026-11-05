@@ -1,21 +1,26 @@
 # Framework Laptop 16 RGB Macropad: per-key colour from the host
 
-A firmware patch for the Framework Laptop 16 RGB Macropad that lets software on
-the host give each key its own colour while the keyboard is running.
+[![tests](https://github.com/GBra-4-669/framework16-macropad-rgb/actions/workflows/tests.yml/badge.svg)](https://github.com/GBra-4-669/framework16-macropad-rgb/actions/workflows/tests.yml)
+
+A QMK firmware patch for the Framework Laptop 16 RGB Macropad that lets software
+on the host give each key its own colour (color) while the keyboard is running.
+The stock firmware only sets one colour for all 24 keys.
 
 The patch adds VIA's keyboard-specific custom channel, so a host program can set
 a colour per key over raw HID without reflashing anything.
 [docs/ANATOMY.md](docs/ANATOMY.md) maps the firmware stack and
 [docs/PROTOCOL.md](docs/PROTOCOL.md) has the bytes.
 
+Download the image from the
+[v0.1.0 release](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/tag/v0.1.0)
+and flash it with [flash-macropad.py](flash-macropad.py), or build it from the
+tree.
+
 It exists for one use. A deck panel on the screen paints a grid of actions, the
 macropad is painted the same way from the same table, and a key is found by
 matching it to the panel instead of counting from a corner.
 
 <img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
-
-The photo is the lit macropad. The clip below shows the per-key palette this
-firmware adds.
 
 ## Why this needs firmware
 
@@ -88,8 +93,9 @@ expected image header and the sha256 to compare against.
 > the EEPROM keymap on first boot.** Both are recoverable: Framework publishes
 > the stock image and an erase image, and the module enters an RP2040 bootloader
 > that appears as a USB drive. Back the keymap up first. `flash-macropad.py` does that automatically and writes it back after
-> the flash. It uses `sudo` to mount the volume and copy the image; opening the
-> module does not. Read the script before you run it.
+> the flash. It uses `sudo` to mount the volume, copy the image, sync it,
+> compare it, unmount it and re-trigger udev; opening the module does not. Read
+> the script before you run it.
 
 Install the udev rule once, so the module's hidraw node is readable as your user:
 
@@ -142,14 +148,14 @@ compile.
 | `keyboards/framework/macropad/panel_palette.c` | the whole addition: palette, painting, the VIA channel, diagnostics |
 | `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed, see [Lessons and traps](#lessons-and-traps) |
 | `keyboards/framework/macropad/rules.mk` | Framework's two settings plus the line that puts `panel_palette.c` in the build |
-| `firmware-panel-palette.uf2` | the built image, 113,664 bytes, also attached to the v0.1.0 release |
-| `firmware-panel-palette.uf2.sha256` | the checksum the flasher checks the image against, and which the release carries |
+| [`firmware-panel-palette.uf2`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2) | the built image, 113,664 bytes, also attached to the v0.1.0 release |
+| [`firmware-panel-palette.uf2.sha256`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2.sha256) | the checksum the flasher checks the image against, and which the release carries |
 | `flash-macropad.py` | keymap backup, bootloader jump, flash, verify, keymap restore |
 | `keymap-dumps/` | three EEPROM keymap dumps, including the one the module runs, and the format |
 | `udev/99-framework-macropad-via.rules` | hidraw access as a normal user |
 | `tests/` | tests for the flasher's pure functions, run by `.github/workflows/tests.yml` |
 | `SOURCE.md` | what went into the binary: commit, submodules, the two tree patches, and a written offer |
-| `docs/` | anatomy, build, flashing and protocol notes, and the dated session log |
+| [`docs/`](docs/README.md) | anatomy, build, flashing and protocol notes, and the dated session log |
 
 If you want to understand the firmware rather than just flash it,
 [docs/ANATOMY.md](docs/ANATOMY.md) maps the stack the patch sits in and walks
@@ -161,7 +167,7 @@ firmware exposes a generic HID channel, and [docs/PROTOCOL.md](docs/PROTOCOL.md)
 documents every byte with a small Python client, so any program can set the
 colours.
 
-## The palette protocol
+## The palette protocol (VIA custom channel 0)
 
 The host talks to the firmware through VIA's raw HID interface. Reports are 32
 bytes both ways, byte 0 is the command, and there is no request id. Channel 0 is
@@ -268,9 +274,10 @@ Most of these are not specific to this macropad.
    [session log](docs/session-2026-09-16.md#the-layer-hook-collision).
 
 5. The udev ACL can fail to survive re-enumeration. After a flash the node
-   came back `root:root 0600` with no ACL, and the module is unreadable. The rule
-   adds the `input` group and the flasher re-triggers udev; see
-   [FLASHING.md](docs/FLASHING.md#udev).
+   came back `root:root 0600` with no ACL, and the module is unreadable. The
+   shipped rule relies on `uaccess` and the flasher re-triggers udev;
+   [FLASHING.md](docs/FLASHING.md#udev) shows the optional `GROUP="input"`
+   fallback and what it costs.
 
 6. VIA's raw HID has no request id. Two writers can read each other's
    replies, and a late answer to someone else's question looks like the answer to
@@ -297,7 +304,7 @@ Most of these are not specific to this macropad.
   prove anything, so the firmware is only checked on the module. The flasher's
   pure functions are tested, and `.github/workflows/tests.yml` runs those.
 
-### Limits of the shipped image
+## Limits of the shipped image
 
 Known issues in this image, planned for v0.2:
 

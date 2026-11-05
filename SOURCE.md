@@ -117,8 +117,7 @@ linked into the image. Open an issue on this repository and I will make it
 available.
 
 The pinned commit, the submodule list and the patches above are written out in
-full so the tree can be rebuilt without asking. A written offer under section
-3(b) stays valid for three years from the date of the v0.1.0 release.
+full so the tree can be rebuilt without asking.
 
 ## Licence
 

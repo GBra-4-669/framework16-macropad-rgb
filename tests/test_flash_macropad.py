@@ -23,6 +23,8 @@ fm = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(fm)
 
 IMAGE = os.path.join(REPO, "firmware-panel-palette.uf2")
+HAVE_IMAGE = os.path.exists(IMAGE)
+needs_image = pytest.mark.skipif(not HAVE_IMAGE, reason="the shipped image is not in this checkout")
 DEFAULT_KEYMAP = os.path.join(REPO, "keymap-dumps", "framework-default.hex")
 
 
@@ -46,16 +48,19 @@ def write_uf2(path, blocks):
     return str(path)
 
 
+@needs_image
 def test_shipped_image_passes_validation():
     assert fm.check_image(IMAGE) == os.path.getsize(IMAGE)
 
 
+@needs_image
 def test_shipped_image_matches_its_sidecar():
     expected = fm.expected_sha256(IMAGE)
     assert expected is not None, "the image should ship with a .sha256 sidecar"
     assert fm.sha256_file(IMAGE) == expected
 
 
+@needs_image
 def test_sidecar_missing_is_not_an_error(tmp_path):
     other = tmp_path / "image.uf2"
     other.write_bytes(open(IMAGE, "rb").read())
@@ -68,6 +73,7 @@ def test_rejects_a_file_that_is_not_a_uf2(tmp_path):
     assert fm.check_image(str(path)) is None
 
 
+@needs_image
 def test_rejects_a_truncated_image(tmp_path):
     data = open(IMAGE, "rb").read()[:-100]
     path = tmp_path / "short.uf2"
