@@ -9,7 +9,7 @@ repository adds or replaces are a small change to it.
 |---|---|---|
 | Matrix scanning | `keyboards/framework/matrix.c`, shared by the modules; dimensions come from each keyboard's `MATRIX_ROWS` and `MATRIX_COLS` (4 by 8 on the macropad, 8 by 16 on the full keyboard). Columns are driven as GPIO, rows are read through an ADC and a mux. | untouched |
 | Layout positions | `keyboards/framework/macropad/macropad.h`, a hand-written `LAYOUT` macro; `info.json` holds the physical positions | untouched |
-| Compiled keymap | `keymaps/default/keymap.c`, which QMK copies into EEPROM when the stored keymap is invalid | replaced: `keymaps/palette/keymap.c`, same keys, layer hooks removed |
+| Compiled keymap | `keymaps/default/keymap.c`, which QMK copies into EEPROM when the stored keymap is invalid | replaced: `keymaps/palette/keymap.c`, layer hooks removed and Num made `LT(_FN, KC_NUM)` |
 | Dynamic keymap | EEPROM, edited by VIA at runtime; QMK replaces it with the compiled keymap when its validity magic does not match | left alone on purpose |
 | Layers | QMK core, `layer_state` is a bitmask, 16 bits wide for 10 layers here | read, to pick the layer colour |
 | RGB matrix | QMK core, plus the LED tables in `macropad.c` | painted on layer 0, one callback added |

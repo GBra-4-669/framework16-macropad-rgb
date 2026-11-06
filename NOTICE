@@ -27,7 +27,8 @@ Copyright (C) 2022 Framework Computer.
 Licensed GPL-2.0-or-later.
 
 keymaps/palette/keymap.c is Framework's default macropad keymap with the layer
-hooks removed. The keycode tables are theirs; the removal is mine.
+hooks removed and one keycode changed: Num becomes `LT(_FN, KC_NUM)`. The keycode
+tables are theirs; that change and the removal are mine.
 
 keymap-dumps/framework-default.hex is a copy of the keymap Framework's compiled
 layout produces in the module's EEPROM, so it is their layout too.

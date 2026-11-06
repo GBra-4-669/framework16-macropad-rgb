@@ -22,8 +22,8 @@ matching it to the panel instead of counting from a corner.
 
 <img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
 
-The photo is the demo build the panel was developed against, not the shipped
-palette; the GIF further down is.
+The photo is the demo build the panel was developed against, so neither its
+palette nor its lit-key pattern is the shipped one; the GIF further down is.
 
 ## Why this needs firmware
 
@@ -141,10 +141,13 @@ into Framework's fork and built there.
 If you just want to try it, the built image is included and there is nothing to
 compile.
 
+The history was imported from the private repository where the work happened, so
+this repository is newer than its first commit.
+
 | Path | What it is |
 |---|---|
 | `keyboards/framework/macropad/panel_palette.c` | the whole addition: palette, painting, the VIA channel, diagnostics |
-| `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed, see [Lessons and traps](#lessons-and-traps) |
+| `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed and Num made `LT(_FN, KC_NUM)`, see [Lessons and traps](#lessons-and-traps) |
 | `keyboards/framework/macropad/rules.mk` | Framework's two settings plus the line that puts `panel_palette.c` in the build |
 | [`firmware-panel-palette.uf2`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2) | the built image, 113,664 bytes, also attached to the v0.1.0 release |
 | [`firmware-panel-palette.uf2.sha256`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2.sha256) | the checksum the flasher checks the image against, and which the release carries |

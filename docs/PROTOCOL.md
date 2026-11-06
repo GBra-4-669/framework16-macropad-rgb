@@ -91,7 +91,7 @@ Cells are row-major over the 4 by 4 panel grid. The keypad row is 1-based (1 to
 | 12 | 3,0 | 4,0 | 9 |
 | 13 | 3,1 | 4,1 | 11 |
 | 14 | 3,2 | 4,2 | 15 |
-| 15 | not drawn | 4,3 | 13, unused by the panel |
+| 15 | not drawn | 4,3 | none; the key is LED 13 but not on the panel |
 
 The panel's grid is 4 by 4 and the keypad has 24 keys, so 15 of them are panel
 keys. The sixteenth cell of the grid falls on a key that exists (LED index 13)
