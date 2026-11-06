@@ -12,18 +12,17 @@ a colour per key over raw HID without reflashing anything.
 [docs/PROTOCOL.md](docs/PROTOCOL.md) has the bytes.
 
 Download the image from the
-[v0.1.0 release](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/tag/v0.1.0)
+[latest release](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/latest)
 and flash it with [flash-macropad.py](flash-macropad.py), or build it from the
 tree.
 
 It exists for one use. A deck panel on the screen paints a grid of actions, the
-macropad is painted the same way from the same table, and a key is found by
+macropad is painted the same way from the same table and a key is found by
 matching it to the panel instead of counting from a corner.
 
-<img src="docs/images/macropad.jpg" width="360" alt="The lit macropad">
-
-The photo is the demo build the panel was developed against, so neither its
-palette nor its lit-key pattern is the shipped one; the GIF further down is.
+<p align="center">
+  <img src="docs/images/hero-combined.gif" width="760" alt="The macropad on the stock firmware at the left, and flashed with per-key colours at the right, cycling four states">
+</p>
 
 ## Why this needs firmware
 
@@ -131,7 +130,7 @@ What it reports when it is done:
 
 `--status` prints the layer colour and the change counter, which is how a
 palette that did not update gets traced. [docs/FLASHING.md](docs/FLASHING.md)
-has the manual procedure, the failure modes, and the way back to stock
+has the manual procedure, the failure modes and the way back to stock
 firmware.
 
 ## What is in this repository
@@ -141,22 +140,20 @@ into Framework's fork and built there.
 If you just want to try it, the built image is included and there is nothing to
 compile.
 
-The history was imported from the private repository where the work happened, so
-this repository is newer than its first commit.
 
 | Path | What it is |
 |---|---|
 | `keyboards/framework/macropad/panel_palette.c` | the whole addition: palette, painting, the VIA channel, diagnostics |
 | `keyboards/framework/macropad/keymaps/palette/keymap.c` | Framework's default keymap with the layer hooks removed and Num made `LT(_FN, KC_NUM)`, see [Lessons and traps](#lessons-and-traps) |
 | `keyboards/framework/macropad/rules.mk` | Framework's two settings plus the line that puts `panel_palette.c` in the build |
-| [`firmware-panel-palette.uf2`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2) | the built image, 113,664 bytes, also attached to the v0.1.0 release |
-| [`firmware-panel-palette.uf2.sha256`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/download/v0.1.0/firmware-panel-palette.uf2.sha256) | the checksum the flasher checks the image against, and which the release carries |
+| [`firmware-panel-palette.uf2`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/latest/download/firmware-panel-palette.uf2) | the built image, 113,664 bytes, also attached to the latest release |
+| [`firmware-panel-palette.uf2.sha256`](https://github.com/GBra-4-669/framework16-macropad-rgb/releases/latest/download/firmware-panel-palette.uf2.sha256) | the checksum the flasher checks the image against, and which the release carries |
 | `flash-macropad.py` | keymap backup, bootloader jump, flash, verify, keymap restore |
 | `keymap-dumps/` | three EEPROM keymap dumps, including the one the module runs, and the format |
 | `udev/99-framework-macropad-via.rules` | hidraw access as a normal user |
 | `tests/` | tests for the flasher's pure functions, run by `.github/workflows/tests.yml` |
-| `SOURCE.md` | what went into the binary: commit, submodules, the two tree patches, and a written offer |
-| [`docs/`](docs/README.md) | anatomy, build, flashing and protocol notes, and the dated session log |
+| `SOURCE.md` | what went into the binary: commit, submodules, the two tree patches and a written offer |
+| [`docs/`](docs/README.md) | anatomy, build, flashing and protocol notes and the dated session log |
 
 If you want to understand the firmware rather than just flash it,
 [docs/ANATOMY.md](docs/ANATOMY.md) maps the stack the patch sits in and walks
@@ -320,5 +317,5 @@ licensed GPL-2.0-or-later. [LICENSE](LICENSE) has the full text,
 what went into the binary.
 
 Framework, Framework Laptop 16 and RGB Macropad are trademarks of Framework
-Computer Inc. This is a personal project, not a Framework release, and not
+Computer Inc. This is a personal project, not a Framework release and not
 supported by them.

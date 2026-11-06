@@ -222,6 +222,6 @@ def test_udev_rule_is_narrow_and_grants_the_documented_group():
 
 
 def test_readme_images_exist():
-    for name in ("macropad.jpg", "layers.gif", "macropad.mp4"):
+    for name in ("hero-combined.gif", "layers.gif", "macropad.mp4"):
         path = os.path.join(REPO, "docs", "images", name)
         assert os.path.getsize(path) > 1000, f"{name} is missing or empty"
